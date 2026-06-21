@@ -1,6 +1,5 @@
 #include "ft_nmap.h"
 #include "parser.h"
-#include "stddef.h"
 
 int main(int argc, char **argv) {
     t_parser_ctx    ctx;
@@ -13,7 +12,7 @@ int main(int argc, char **argv) {
         .footer         = ""
     };
 
-    t_data  data = {
+    t_raw_data  data = {
         .file = NULL,
         .port = NULL,
         .scan = NULL,
