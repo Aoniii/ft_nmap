@@ -1,2 +1,3 @@
 MAIN_SRCS	=	main.c
-MAIN_SRCS	+=	build.c
+MAIN_SRCS	+=	config.c
+MAIN_SRCS	+=	parse_port.c

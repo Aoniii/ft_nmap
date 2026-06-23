@@ -71,6 +71,16 @@ int main(int argc, char **argv) {
 		return (ctx.err == CALLBACK_EXIT ? 0 : 1);
 	}
 
+    // Test
+    t_config    cfg;
+
+    if (build_config(&data, &cfg) == -1)
+        return (-1);
+
+    for (int i = 0; i < cfg.nb_ports; i++) {
+        printf("%i\n", cfg.ports[i]);
+    }
+
     cleaner(args);
     return (0);
 }

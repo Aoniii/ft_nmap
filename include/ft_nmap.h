@@ -2,7 +2,10 @@
 # define FT_NMAP_H
 
 # include <stdlib.h>
+# include <stdbool.h>
 # include <stdio.h>
+# include <string.h>
+# include <errno.h>
 # include <netinet/in.h>
 
 typedef struct  s_raw_data {
@@ -44,7 +47,25 @@ typedef struct  s_config {
     int         speedup;
 }               t_config;
 
-//  build.c
+enum    e_scan_type {
+    SCAN_SYN    = 0,
+    SCAN_NULL   = 1,
+    SCAN_ACK    = 2,
+    SCAN_FIN    = 3,
+    SCAN_XMAS   = 4,
+    SCAN_UDP    = 5,
+    SCAN_COUNT  = 6
+};
+
+# define F_SYN  (1 << SCAN_SYN)
+# define F_NULL (1 << SCAN_NULL)
+# define F_ACK  (1 << SCAN_ACK)
+# define F_FIN  (1 << SCAN_FIN)
+# define F_XMAS (1 << SCAN_XMAS)
+# define F_UDP  (1 << SCAN_UDP)
+# define F_ALL  (F_SYN|F_NULL|F_ACK|F_FIN|F_XMAS|F_UDP)
+
 int build_config(t_raw_data *raw, t_config *cfg);
+int parse_port(t_raw_data *data, t_config *cfg);
 
 #endif
