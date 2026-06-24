@@ -1,5 +1,4 @@
 #include "ft_nmap.h"
-#include <string.h>
 
 int parse_scan(t_raw_data *raw, t_config *cfg, char **err) {
     static const uint8_t    type_flag[] = {F_SYN, F_NULL, F_ACK, F_FIN, F_XMAS, F_UDP};
@@ -32,20 +31,23 @@ int parse_scan(t_raw_data *raw, t_config *cfg, char **err) {
             snprintf(*err, 1024, "Empty scan type");
             return (-1);
         }
+        if (len > 4) {
+            snprintf(*err, 1024, "Invalid scan type (too long), use SYN/NULL/ACK/FIN/XMAS/UDP");
+            return (-1);
+        }
 
         i = 0;
-        strncpy(token, start, len);
+        memcpy(token, start, len);
+        token[len] = '\0';
         while (i <= 6) {
             if (i == 6) {
                 snprintf(*err, 1024, "Invalid scan type (%s), use SYN/NULL/ACK/FIN/XMAS/UDP", token);
-                free(str);
                 return (-1);
             }
 
             if (strcmp(str_flag[i], token) == 0) {
                 if (cfg->scan_flags & type_flag[i]) {
                     snprintf(*err, 1024, "Duplicate scan type (%s)", token);
-                    free(str);
                     return (-1);
                 }
 
