@@ -67,7 +67,7 @@ enum    e_scan_type {
 # define F_ALL  (F_SYN|F_NULL|F_ACK|F_FIN|F_XMAS|F_UDP)
 
 int build_config(t_raw_data *raw, t_config *cfg);
-int parse_port(t_raw_data *data, t_config *cfg);
-int parse_scan(t_raw_data *raw, t_config *cfg);
+int parse_port(t_raw_data *data, t_config *cfg, char **err);
+int parse_scan(t_raw_data *raw, t_config *cfg, char **err);
 
 #endif

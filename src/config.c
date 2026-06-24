@@ -1,6 +1,9 @@
 #include "ft_nmap.h"
 
 int build_config(t_raw_data *raw, t_config *cfg) {
+    char    err[1024];
+    char    *err_ptr = err;
+
     memset(cfg, 0, sizeof(*cfg));
 
     if (raw->speedup < 0 || raw->speedup > 250) {
@@ -9,15 +12,13 @@ int build_config(t_raw_data *raw, t_config *cfg) {
     }
     cfg->speedup = raw->speedup;
 
-    if (parse_port(raw, cfg) == -1) {
-        fprintf(stderr, "ft_nmap: error: ports\n");
-        // TODO: create multiple msg
+    if (parse_port(raw, cfg, &err_ptr) == -1) {
+        fprintf(stderr, "ft_nmap: error: ports: %s\n", err);
         return (-1);
     }
 
-    if (parse_scan(raw, cfg) == -1) {
-        fprintf(stderr, "ft_nmap: error: scans\n");
-        // TODO: create multiple msg
+    if (parse_scan(raw, cfg, &err_ptr) == -1) {
+        fprintf(stderr, "ft_nmap: error: scans: %s\n", err);
         return (-1);
     }
 

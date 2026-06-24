@@ -35,9 +35,9 @@ int main(int argc, char **argv) {
             .help       = "ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)"
         },
         {
-            .short_opt  = 0,
+            .short_opt  = 's',
             .long_opt   = "scan",
-            .flags      = OPT_LONG | TYPE_STRING,
+            .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.scan,
             .help       = "SYN/NULL/FIN/XMAS/ACK/UDP"
         },
