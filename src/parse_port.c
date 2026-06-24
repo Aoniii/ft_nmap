@@ -1,12 +1,12 @@
 #include "ft_nmap.h"
 
-int parse_port(t_raw_data *data, t_config *cfg) {
+int parse_port(t_raw_data *raw, t_config *cfg) {
     char    *str;
     long    value;
     int     i;
     bool    is_range;
 
-    if (!data->port) {
+    if (!raw->port) {
         i = 1;
         while (i <= 1024) {
             cfg->ports[i - 1] = i;
@@ -16,7 +16,7 @@ int parse_port(t_raw_data *data, t_config *cfg) {
         return (0);
     }
 
-    str = data->port;
+    str = raw->port;
     is_range = false;
     if (!str[0] || str[0] < '0' || str[0] > '9')
         return (-1);

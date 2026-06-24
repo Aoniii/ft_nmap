@@ -6,6 +6,7 @@
 # include <stdio.h>
 # include <string.h>
 # include <errno.h>
+# include <sys/types.h>
 # include <netinet/in.h>
 
 typedef struct  s_raw_data {
@@ -67,5 +68,6 @@ enum    e_scan_type {
 
 int build_config(t_raw_data *raw, t_config *cfg);
 int parse_port(t_raw_data *data, t_config *cfg);
+int parse_scan(t_raw_data *raw, t_config *cfg);
 
 #endif

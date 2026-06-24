@@ -15,5 +15,11 @@ int build_config(t_raw_data *raw, t_config *cfg) {
         return (-1);
     }
 
+    if (parse_scan(raw, cfg) == -1) {
+        fprintf(stderr, "ft_nmap: error: scans\n");
+        // TODO: create multiple msg
+        return (-1);
+    }
+
     return (0);
 }
