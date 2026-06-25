@@ -71,28 +71,8 @@ int main(int argc, char **argv) {
 		return (ctx.err == CALLBACK_EXIT ? 0 : 1);
 	}
 
-    // Test
-    t_config    cfg;
-
-    if (build_config(&data, &cfg) == -1)
-        return (-1);
-
-    printf("Ports: ");
-    for (int i = 0; i < cfg.nb_ports; i++) {
-        printf("%i ", cfg.ports[i]);
-    }
-    printf("\n");
-
-    static const uint8_t  type_flag[] = {F_SYN, F_NULL, F_ACK, F_FIN, F_XMAS, F_UDP};
-    static const char    *str_flag[]  = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
-
-    printf("Scans: ");
-    for (int i = 0; i < 6; i++) {
-        if (cfg.scan_flags & type_flag[i])
-            printf("%s ", str_flag[i]);
-    }
-    printf("\n");
+    int ret = nmap(&data, args);
 
     cleaner(args);
-    return (0);
+    return (ret);
 }

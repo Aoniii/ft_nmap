@@ -7,7 +7,11 @@
 # include <string.h>
 # include <errno.h>
 # include <sys/types.h>
+# include <sys/socket.h>
 # include <netinet/in.h>
+# include <netinet/ip.h>
+# include <arpa/inet.h>
+# include <netdb.h>
 
 typedef struct  s_raw_data {
     char        *file;
@@ -26,7 +30,6 @@ typedef enum    e_state {
 }               t_state;
 
 typedef struct  s_port_result {
-    uint16_t    port;
     t_state     results[6];
     t_state     conclusion;
 }               t_port_result;
@@ -35,13 +38,11 @@ typedef struct      s_target {
     char            *name;
     struct in_addr  ip;
     t_port_result   *ports;
-    int             nb_ports;
     struct s_target *next;
 }                   t_target;
 
 typedef struct  s_config {
     t_target    *targets;
-    int         nb_targets;
     uint16_t    ports[1024];
     int         nb_ports;
     uint8_t     scan_flags;
@@ -66,8 +67,11 @@ enum    e_scan_type {
 # define F_UDP  (1 << SCAN_UDP)
 # define F_ALL  (F_SYN|F_NULL|F_ACK|F_FIN|F_XMAS|F_UDP)
 
-int build_config(t_raw_data *raw, t_config *cfg);
-int parse_port(t_raw_data *data, t_config *cfg, char **err);
-int parse_scan(t_raw_data *raw, t_config *cfg, char **err);
+int     build_config(t_raw_data *raw, t_config *cfg);
+int     parse_port(t_raw_data *data, t_config *cfg, char **err);
+int     parse_scan(t_raw_data *raw, t_config *cfg, char **err);
+void    free_target(t_config *cfg);
+int     build_target(t_raw_data *raw, t_config *cfg, char **args);
+int     nmap(t_raw_data *raw, char **args);
 
 #endif

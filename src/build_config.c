@@ -2,8 +2,9 @@
 
 int build_config(t_raw_data *raw, t_config *cfg) {
     char    err[1024];
-    char    *err_ptr = err;
+    char    *err_ptr;
 
+    err_ptr = err;
     memset(cfg, 0, sizeof(*cfg));
 
     if (raw->speedup < 0 || raw->speedup > 250) {
