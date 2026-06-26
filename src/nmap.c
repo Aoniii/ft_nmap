@@ -11,6 +11,14 @@ int nmap(t_raw_data *raw, char **args) {
         return (-1);
     }
 
+    t_target    *node = cfg.targets;
+    char        buf[INET_ADDRSTRLEN];
+    while (node) {
+        inet_ntop(AF_INET, &node->ip, buf, sizeof(buf));
+        printf("name: %s, ip: %s\n", node->name, buf);
+        node = node->next;
+    }
+
     free_target(&cfg);
     return (0);
 }

@@ -83,7 +83,6 @@ static int  add_target(t_target **last, t_config *cfg, char *ip, char **err) {
 static int  file_target(t_target **last, t_config *cfg, char *file, char **err) {
     FILE    *fp;
     char    *line;
-    char    *saveptr;
     char    *token;
     size_t  cap;
     ssize_t n;
@@ -97,14 +96,14 @@ static int  file_target(t_target **last, t_config *cfg, char *file, char **err) 
     line = NULL;
     cap = 0;
     while ((n = getline(&line, &cap, fp)) != -1) {
-        token = strtok_r(line, " \t\n\r\f\v", &saveptr);
+        token = strtok(line, " \t\n\r\f\v");
         while (token) {
             if (add_target(last, cfg, token, err) == -1) {
                 free(line);
                 fclose(fp);
                 return (-1);
             }
-            token = strtok_r(NULL, " \t\n\r\f\v", &saveptr);
+            token = strtok(NULL, " \t\n\r\f\v");
         }
     }
 
