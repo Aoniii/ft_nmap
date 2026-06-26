@@ -1,8 +1,8 @@
 #include "ft_nmap.h"
-#include <netdb.h>
-#include <netinet/in.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <sys/types.h>
 
 void    free_target(t_config *cfg) {
     t_target    *next;
@@ -80,6 +80,39 @@ static int  add_target(t_target **last, t_config *cfg, char *ip, char **err) {
     return (0);
 }
 
+static int  file_target(t_target **last, t_config *cfg, char *file, char **err) {
+    FILE    *fp;
+    char    *line;
+    char    *saveptr;
+    char    *token;
+    size_t  cap;
+    ssize_t n;
+
+    fp = fopen(file, "r");
+    if (!fp) {
+        snprintf(*err, 1024, "cannot open file (%s)", file);
+        return (-1);
+    }
+
+    line = NULL;
+    cap = 0;
+    while ((n = getline(&line, &cap, fp)) != -1) {
+        token = strtok_r(line, " \t\n\r\f\v", &saveptr);
+        while (token) {
+            if (add_target(last, cfg, token, err) == -1) {
+                free(line);
+                fclose(fp);
+                return (-1);
+            }
+            token = strtok_r(NULL, " \t\n\r\f\v", &saveptr);
+        }
+    }
+
+    free(line);
+    fclose(fp);
+    return (0);
+}
+
 int build_target(t_raw_data *raw, t_config *cfg, char **args) {
     char        err[1024];
     char        *err_ptr;
@@ -96,12 +129,25 @@ int build_target(t_raw_data *raw, t_config *cfg, char **args) {
     }
 
     i = 0;
-    while (args[i]) {
+    while (args && args[i]) {
         if (add_target(&last, cfg, args[i], &err_ptr) == -1) {
             fprintf(stderr, "ft_nmap: error: %s\n", err);
             return (-1);
         }
         i++;
     }
+
+    if (raw->file) {
+        if (file_target(&last, cfg, raw->file, &err_ptr) == -1) {
+            fprintf(stderr, "ft_nmap: error: %s\n", err);
+            return (-1);
+        }
+    }
+
+    if (!cfg->targets) {
+        fprintf(stderr, "ft_nmap: error: No target specified.\n");
+        return (-1);
+    }
+
     return (0);
 }
