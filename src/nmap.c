@@ -38,10 +38,18 @@ static void show_scan(t_config cfg) {
     printf("\n");
 }
 
+static long    now_ms(void) {
+	struct timeval  tv;
+
+	gettimeofday(&tv, NULL);
+	return ((long)tv.tv_sec * 1000 + tv.tv_usec / 1000);
+}
+
 int nmap(t_raw_data *raw, char **args) {
     t_config    cfg;
     t_target    *target;
     char        buff[INET_ADDRSTRLEN];
+    long        start_time;
 
     if (build_config(raw, &cfg) == -1)
         return (-1);
@@ -55,13 +63,14 @@ int nmap(t_raw_data *raw, char **args) {
     show_target_ip(cfg);
     printf("No of Ports to scan: %d\n", cfg.nb_ports);
     show_scan(cfg);
-    printf("No of threads: %d\n", cfg.speedup);
+    printf("No of threads: %d\n\n", cfg.speedup);
     target = cfg.targets;
     while (target) {
+        start_time = now_ms();
         inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
         printf("Scanning...\n");
         sleep(1);
-        printf("\033[A\033[KScan took: \n");    // TODO: print time
+        printf("\033[A\033[KScan took: %lums\n", now_ms() - start_time);    // TODO: print time
         printf("IP address: %s\n", buff);
         target = target->next;
     }
