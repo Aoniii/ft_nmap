@@ -8,9 +8,16 @@ int main(int argc, char **argv) {
 
     t_parser_info   info = {
         .program        = argv[0],
-        .usage          = "",
-        .description    = "",
-        .footer         = ""
+        .usage          = "[OPTIONS] <ip|hostname>... or --file FILE",
+        .description    = "\nft_nmap - a multithreaded port scanner.\n"
+                          "Scans the given targets using raw sockets and pcap,\n"
+                          "reporting the state of each port per scan type.\n",
+        .footer         = "\nTargets may be IPv4 addresses or hostnames, given as\n"
+                          "arguments or listed in a file (--file).\n"
+                          "\n"
+                          "Made by Aoniii & Unam3dd - https://github.com/Aoniii/ft_nmap\n"
+                          "Aoniii: https://github.com/Aoniii\n"
+                          "Unam3dd: https://github.com/Unam3dd"
     };
 
     t_raw_data  data = {
