@@ -2,7 +2,7 @@
 #include <stddef.h>
 
 /**
- * checksum - Internet checksum (RFC 1071).
+ * @brief checksum - Internet checksum (RFC 1071).
  * Used to verify integrity of IP/TCP/UDP/ICMP headers.
  * Sums the buffer in 16-bit words, folds carries, returns one's complement.
  * Return value goes directly into the checksum field (do NOT apply htons).

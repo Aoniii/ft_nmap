@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * @brief parse_port - Parses the --ports argument into a port list.
+ * Accepts individual ports and ranges, mixed and comma-separated
+ * (e.g. "80", "1-1024", "1,5-15"). Ports must be in strictly ascending
+ * order, with no duplicates, and the total cannot exceed 1024.
+ * If --ports is absent, defaults to the range 1-1024.
+ */
 int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
     char    *str;
     char    *before;
@@ -10,6 +17,7 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
     int     i;
     bool    is_range;
 
+    // no --ports given: default to the full 1-1024 range (subject default)
     if (!raw->port) {
         i = 1;
         while (i <= 1024) {
@@ -22,6 +30,7 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
 
     str = raw->port;
     is_range = false;
+    // must start with a digit, otherwise the input is malformed
     if (!str[0] || str[0] < '0' || str[0] > '9') {
         snprintf(*err, 1024, "The port value is invalid (%s)", str);
         return (-1);
@@ -30,19 +39,25 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
     while (1) {
         errno = 0;
         before = str;
+        // reads a number and advances str
         value = strtol(str, &str, 10);
 
+        // strtol consumed nothing: a number was expected but missing
+        // (e.g. trailing comma "80,")
         if (str == before) {
             snprintf(*err, 1024, "Missing port number");
             return (-1);
         }
+        // out of valid port range, or overflow
         if (errno == ERANGE || value <= 0 || value > 65535) {
             snprintf(*err, 1024, "The port value is incorrect (%ld)", value);
             return (-1);
         }
 
         if (is_range) {
+            // range end: fill every port from (previous + 1) up to value
             i = cfg->ports[cfg->nb_ports - 1] + 1;
+            // reject reversed ranges like "5-3"
             if (i >= value) {
                 snprintf(*err, 1024, "Invalid range start must be lower than end");
                 return (-1);
@@ -61,11 +76,13 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
 
             is_range = false;
         } else {
+            // single port
             if (cfg->nb_ports >= 1024) {
                 snprintf(*err, 1024, "Too many ports (max 1024)");
                 return (-1);
             }
 
+            // enforce ascending order and reject duplicates
             if (cfg->nb_ports > 0) {
                 if (cfg->ports[cfg->nb_ports - 1] >= value) {
                     snprintf(*err, 1024, "Ports must be in ascending order");
@@ -77,9 +94,11 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
             cfg->nb_ports++;
         }
 
+        // end of string: done
         if (*str == '\0')
             break ;
 
+        // '-' opens a range, ',' separates entries, anything else is invalid
         if (*str == '-') {
             is_range = true;
             str++;

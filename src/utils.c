@@ -1,6 +1,9 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+/**
+ * @brief Returns the current time in milliseconds.
+ */
 long    now_ms(void) {
 	struct timeval  tv;
 

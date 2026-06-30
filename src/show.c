@@ -2,6 +2,11 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 
+/**
+ * @brief show_target_ip - Prints the target IP(s) for the scan header.
+ * Single target  -> inline: "Target Ip-Address: 1.2.3.4"
+ * Several targets -> bullet list, one IP per line.
+ */
 void show_target_ip(t_config cfg) {
     t_target    *target;
     char        ip[INET_ADDRSTRLEN];
@@ -18,6 +23,12 @@ void show_target_ip(t_config cfg) {
     }
     printf("\n");
 }
+
+/**
+ * @brief show_scan - Prints the scan types to perform, decoded from the bitmask.
+ * Each set bit in scan_flags maps to its name; types are '/'-separated
+ * (e.g. "SYN/UDP/ACK").
+ */
 
 void show_scan(t_config cfg) {
     static const uint8_t    type_flag[] = {F_SYN, F_NULL, F_ACK, F_FIN, F_XMAS, F_UDP};
