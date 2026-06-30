@@ -15,9 +15,7 @@ int main(int argc, char **argv) {
         .footer         = "\nTargets may be IPv4 addresses or hostnames, given as\n"
                           "arguments or listed in a file (--file).\n"
                           "\n"
-                          "Made by Aoniii & Unam3dd - https://github.com/Aoniii/ft_nmap\n"
-                          "Aoniii: https://github.com/Aoniii\n"
-                          "Unam3dd: https://github.com/Unam3dd"
+                          "Made by snourry & stales - https://github.com/Aoniii/ft_nmap\n"
     };
 
     t_raw_data  data = {
