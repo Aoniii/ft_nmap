@@ -1,4 +1,10 @@
-#include "ft_nmap.h"
+#include "network.h"
+#include <errno.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 int setup_network(t_net *net) {
     int on;

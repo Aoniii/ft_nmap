@@ -1,8 +1,9 @@
 #include "ft_nmap.h"
-#include <stddef.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
 void    free_target(t_config *cfg) {
     t_target    *next;

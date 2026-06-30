@@ -1,4 +1,9 @@
 #include "ft_nmap.h"
+#include "network.h"
+#include "config.h"
+#include "display.h"
+#include <arpa/inet.h>
+#include <stdio.h>
 
 int nmap(t_raw_data *raw, char **args) {
     t_config    cfg;

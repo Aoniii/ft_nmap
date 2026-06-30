@@ -1,4 +1,6 @@
 #include "ft_nmap.h"
+#include <arpa/inet.h>
+#include <stdio.h>
 
 void show_target_ip(t_config cfg) {
     t_target    *target;

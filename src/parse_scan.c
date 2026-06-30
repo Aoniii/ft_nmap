@@ -1,4 +1,6 @@
 #include "ft_nmap.h"
+#include <stdio.h>
+#include <string.h>
 
 int parse_scan(t_raw_data *raw, t_config *cfg, char **err) {
     static const uint8_t    type_flag[] = {F_SYN, F_NULL, F_ACK, F_FIN, F_XMAS, F_UDP};

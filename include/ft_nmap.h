@@ -1,18 +1,9 @@
 #ifndef FT_NMAP_H
 # define FT_NMAP_H
 
-# include <stdlib.h>
 # include <stdbool.h>
-# include <stdio.h>
-# include <string.h>
-# include <errno.h>
-# include <sys/types.h>
-# include <sys/socket.h>
+# include <stdint.h>
 # include <netinet/in.h>
-# include <netinet/ip.h>
-# include <arpa/inet.h>
-# include <netdb.h>
-# include <unistd.h>
 
 typedef struct  s_raw_data {
     char        *file;
@@ -50,11 +41,6 @@ typedef struct  s_config {
     int         speedup;
 }               t_config;
 
-typedef struct  s_net {
-    int         sock;
-    // pcap_t *handle;
-}               t_net;
-
 enum    e_scan_type {
     SCAN_SYN    = 0,
     SCAN_NULL   = 1,
@@ -73,16 +59,6 @@ enum    e_scan_type {
 # define F_UDP  (1 << SCAN_UDP)
 # define F_ALL  (F_SYN|F_NULL|F_ACK|F_FIN|F_XMAS|F_UDP)
 
-int     build_config(t_raw_data *raw, t_config *cfg);
-int     parse_port(t_raw_data *data, t_config *cfg, char **err);
-int     parse_scan(t_raw_data *raw, t_config *cfg, char **err);
-void    free_target(t_config *cfg);
-int     build_target(t_raw_data *raw, t_config *cfg, char **args);
 int     nmap(t_raw_data *raw, char **args);
-long    now_ms(void);
-void    show_target_ip(t_config cfg);
-void    show_scan(t_config cfg);
-int     setup_network(t_net *net);
-void    cleanup_network(t_net *net);
 
 #endif

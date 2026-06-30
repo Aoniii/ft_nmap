@@ -1,4 +1,7 @@
 #include "ft_nmap.h"
+#include "config.h"
+#include <stdio.h>
+#include <string.h>
 
 int build_config(t_raw_data *raw, t_config *cfg) {
     char    err[1024];

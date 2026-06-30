@@ -1,5 +1,6 @@
 #include "ft_nmap.h"
 #include "parser.h"
+#include <stddef.h>
 
 int main(int argc, char **argv) {
     t_parser_ctx    ctx;

@@ -1,5 +1,7 @@
 #include "ft_nmap.h"
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
     char    *str;
