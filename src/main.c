@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
         },
         {
             .short_opt  = 'p',
-            .long_opt   = "port",
+            .long_opt   = "ports",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.port,
             .help       = "ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)"
@@ -55,17 +55,17 @@ int main(int argc, char **argv) {
             .help       = "[250 max] number of parallel threads to use"
         },
         {
-			.short_opt	= 0,
-			.long_opt	= "help",
-			.flags		= OPT_LONG | OPT_CALLBACK_EXIT | TYPE_CALLBACK,
-			.value		= (void *)&(t_callback_info){
+			.short_opt  = 0,
+			.long_opt   = "help",
+			.flags      = OPT_LONG | OPT_CALLBACK_EXIT | TYPE_CALLBACK,
+			.value      = (void *)&(t_callback_info){
 				.fn = callback_help,
 				.data = (void *)&(t_help_data){
 					.info = info,
 					.options = options
 				}
 			},
-			.help		= "print this help screen"
+			.help       = "print this help screen"
 		},
         {0}
     };
