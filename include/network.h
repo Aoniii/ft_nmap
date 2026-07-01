@@ -69,6 +69,14 @@ struct          pseudo_hdr {
     uint16_t    tcp_len;
 } __attribute__((packed));
 
+/* TCP flag masks: one bit per flag, combined with OR for the scans */
+# define TH_FIN  0x01
+# define TH_SYN  0x02
+# define TH_RST  0x04
+# define TH_PSH  0x08
+# define TH_ACK  0x10
+# define TH_URG  0x20
+
 int         setup_network(t_net *net);
 void        cleanup_network(t_net *net);
 uint16_t    checksum(const void *data, size_t len);
