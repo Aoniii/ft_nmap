@@ -29,16 +29,23 @@ int nmap(t_raw_data *raw, char **args) {
     show_target_ip(cfg);
     printf("No of Ports to scan: %d\n", cfg.nb_ports);
     show_scan(cfg);
-    printf("No of threads: %d\n\n", cfg.speedup);
+    printf("No of threads: %d\n", cfg.speedup);
 
     target = cfg.targets;
     while (target) {
         start_time = now_ms();
-        printf("Scanning...\n");
-        // TODO: scan
-        printf("\033[A\033[KScan took: %.5f secs\n", (double)((now_ms() - start_time) / 1000.0));
+        printf("\nScanning: %s\n", target->name);
+
+        if (get_source_ip(target->ip, &net.src_ip) != 0) {
+            fprintf(stderr, "ft_nmap: warning: cannot reach %s, skipping\n", target->name);
+            target = target->next;
+            continue;
+        }
+
         inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
+        printf("Scan took: %.5f secs\n", (double)((now_ms() - start_time) / 1000.0));
         printf("IP address: %s\n", buff);
+
         target = target->next;
     }
 

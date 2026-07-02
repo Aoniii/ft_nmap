@@ -5,9 +5,10 @@
 # include <stddef.h>
 # include <stdint.h>
 
-typedef struct  s_net {
-    int         sock;
-}               t_net;
+typedef struct      s_net {
+    int             sock;
+    struct in_addr  src_ip;
+}                   t_net;
 
 /*
  * IP header (20 bytes).
