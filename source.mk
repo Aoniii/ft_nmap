@@ -2,6 +2,7 @@ MAIN_SRCS	=	main.c
 MAIN_SRCS	+=	build_config.c
 MAIN_SRCS	+=	build_target.c
 MAIN_SRCS	+=	checksum.c
+MAIN_SRCS	+=	forge_paquet.c
 MAIN_SRCS	+=	get_source_ip.c
 MAIN_SRCS	+=	network.c
 MAIN_SRCS	+=	nmap.c
