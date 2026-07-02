@@ -1,7 +1,7 @@
 #ifndef NETWORK_H
 # define NETWORK_H
 
-#include <netinet/in.h>
+# include <netinet/in.h>
 # include <stddef.h>
 # include <stdint.h>
 
@@ -78,6 +78,9 @@ struct          pseudo_hdr {
 # define TH_PSH  0x08
 # define TH_ACK  0x10
 # define TH_URG  0x20
+
+# define PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct tcp_hdr))
+# define SRC_PORT       49152       // port source local (éphémère)
 
 int         setup_network(t_net *net);
 void        cleanup_network(t_net *net);
