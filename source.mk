@@ -8,5 +8,6 @@ MAIN_SRCS	+=	network.c
 MAIN_SRCS	+=	nmap.c
 MAIN_SRCS	+=	parse_port.c
 MAIN_SRCS	+=	parse_scan.c
+MAIN_SRCS	+=	send_packet.c
 MAIN_SRCS	+=	show.c
 MAIN_SRCS	+=	utils.c

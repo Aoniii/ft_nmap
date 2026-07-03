@@ -86,5 +86,7 @@ int         setup_network(t_net *net);
 void        cleanup_network(t_net *net);
 uint16_t    checksum(const void *data, size_t len);
 int         get_source_ip(struct in_addr target, struct in_addr *out);
+void        forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
+int         send_packet(int sock, char *buffer, struct in_addr dest, uint16_t port);
 
 #endif
