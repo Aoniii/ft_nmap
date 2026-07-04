@@ -52,19 +52,18 @@ int nmap(t_raw_data *raw, char **args) {
             return (-1);
         }
 
-        //  3. for each port and each scan: forge + send
+        //  3. for each port and each scan type, do a scan
         for (int i = 0; i < cfg.nb_ports; i++) {
             uint16_t port = cfg.ports[i];
 
             for (int s = 0; s < SCAN_COUNT; s++) {
-                // ce scan est-il demandé ? (bit allumé dans le bitmask)
+                // Is this scan requested? (bit set in the bitmask)
                 if (!(cfg.scan_flags & (1 << s)))
                     continue;
 
                 uint8_t flags = scan_type_to_flags(s);   // SCAN_SYN -> TH_SYN, etc.
                 t_state state = scan_one(&net, target->ip, port, flags);
 
-                // ranger le résultat dans la case du port, indexée par type de scan
                 target->ports[i].results[s] = state;
             }
         }
