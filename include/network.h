@@ -4,10 +4,16 @@
 # include <netinet/in.h>
 # include <stddef.h>
 # include <stdint.h>
+# include <pcap.h>
+
+typedef enum e_state    t_state;
 
 typedef struct      s_net {
     int             sock;
     struct in_addr  src_ip;
+    pcap_t          *handle;
+    char            *device;
+    int             link_hdr_len;   // datalink header size (14 Ethernet, 16 cooked...)
 }                   t_net;
 
 /*
@@ -81,12 +87,19 @@ struct          pseudo_hdr {
 
 # define PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct tcp_hdr))
 # define SRC_PORT       49152       // port source local (éphémère)
+# define SCAN_TIMEOUT   2           // seconds to wait for a reply before "filtered"
 
-int         setup_network(t_net *net);
-void        cleanup_network(t_net *net);
-uint16_t    checksum(const void *data, size_t len);
-int         get_source_ip(struct in_addr target, struct in_addr *out);
-void        forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
-int         send_packet(int sock, char *buffer, struct in_addr dest, uint16_t port);
+int             setup_network(t_net *net);
+void            cleanup_network(t_net *net);
+uint16_t        checksum(const void *data, size_t len);
+int             get_source_ip(struct in_addr target, struct in_addr *out);
+void            forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
+int             send_packet(int sock, char *buffer, struct in_addr dest, uint16_t port);
+int             setup_pcap(t_net *net);
+int             set_filter(t_net *net, struct in_addr target);
+int             get_link_hdr_len(pcap_t *handle);
+struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
+t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, uint8_t flags);
+uint8_t         scan_type_to_flags(int scan_type);
 
 #endif

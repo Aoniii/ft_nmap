@@ -1,7 +1,9 @@
 #include "network.h"
 #include <errno.h>
 #include <netinet/in.h>
+#include <pcap/pcap.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -25,11 +27,21 @@ int setup_network(t_net *net) {
         return (-1);
     }
 
+    if (setup_pcap(net) == -1) {
+        close(net->sock);
+        return (-1);
+    }
+
     return (0);
 }
 
 void cleanup_network(t_net *net) {
+    if (net->handle)
+        pcap_close(net->handle);
     if (net->sock >= 0)
         close(net->sock);
+    free(net->device);
     net->sock = -1;
+    net->handle = NULL;
+    net->device = NULL;
 }

@@ -44,14 +44,29 @@ int nmap(t_raw_data *raw, char **args) {
             continue;
         }
 
-        //  2. for each port and each scan: forge + send
-        for (int i = 0; i < cfg.nb_ports; i++) {
-            char        buffer[PACKET_SIZE];
-            uint16_t    port = cfg.ports[i];
+        //  2. capture filter for this target
+        if (set_filter(&net, target->ip) == -1) {
+            fprintf(stderr, "ft_nmap: error: failed to set capture filter, aborting scan\n");
+            cleanup_network(&net);
+            free_target(&cfg);
+            return (-1);
+        }
 
-            forge_packet(buffer, net.src_ip, target->ip, port, TH_SYN);
-            if (send_packet(net.sock, buffer, target->ip, port) == -1)
-                fprintf(stderr, "ft_nmap: warning: send failed on port %d\n", port);
+        //  3. for each port and each scan: forge + send
+        for (int i = 0; i < cfg.nb_ports; i++) {
+            uint16_t port = cfg.ports[i];
+
+            for (int s = 0; s < SCAN_COUNT; s++) {
+                // ce scan est-il demandé ? (bit allumé dans le bitmask)
+                if (!(cfg.scan_flags & (1 << s)))
+                    continue;
+
+                uint8_t flags = scan_type_to_flags(s);   // SCAN_SYN -> TH_SYN, etc.
+                t_state state = scan_one(&net, target->ip, port, flags);
+
+                // ranger le résultat dans la case du port, indexée par type de scan
+                target->ports[i].results[s] = state;
+            }
         }
 
         inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
