@@ -42,10 +42,11 @@ void show_scan(t_config cfg) {
     i = 0;
     is_first = true;
     while (i < 6) {
-        if (cfg.scan_flags & type_flag[i])
+        if (cfg.scan_flags & type_flag[i]) {
             printf("%c%s", (is_first ? ' ' : '/'), str_flag[i]);
+            is_first = false;
+        }
         i++;
-        is_first = false;
     }
     printf("\n");
 }

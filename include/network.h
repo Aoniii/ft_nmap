@@ -99,7 +99,7 @@ int             setup_pcap(t_net *net);
 int             set_filter(t_net *net, struct in_addr target);
 int             get_link_hdr_len(pcap_t *handle);
 struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
-t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, uint8_t flags);
+t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type);
 uint8_t         scan_type_to_flags(int scan_type);
 
 #endif

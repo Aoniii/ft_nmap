@@ -40,7 +40,7 @@ int nmap(t_raw_data *raw, char **args) {
         if (get_source_ip(target->ip, &net.src_ip) != 0) {
             fprintf(stderr, "ft_nmap: warning: cannot reach %s, skipping\n", target->name);
             target = target->next;
-            continue;
+            continue ;
         }
 
         //  2. capture filter for this target
@@ -58,12 +58,11 @@ int nmap(t_raw_data *raw, char **args) {
             for (int s = 0; s < SCAN_COUNT; s++) {
                 // Is this scan requested? (bit set in the bitmask)
                 if (!(cfg.scan_flags & (1 << s)))
-                    continue;
+                    continue ;
+                if (s == SCAN_UDP)
+                    continue ;
 
-                uint8_t flags = scan_type_to_flags(s);   // SCAN_SYN -> TH_SYN, etc.
-                t_state state = scan_one(&net, target->ip, port, flags);
-
-                target->ports[i].results[s] = state;
+                target->ports[i].results[s] = scan_one(&net, target->ip, port, s);;
             }
         }
 

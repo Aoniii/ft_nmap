@@ -37,6 +37,7 @@ int setup_pcap(t_net *net) {
         fprintf(stderr, "ft_nmap: error: pcap_open_live: %s\n", errbuf);
         return (-1);
     }
+    pcap_setnonblock(net->handle, 1, errbuf);
 
     net->link_hdr_len = get_link_hdr_len(net->handle);
     if (net->link_hdr_len == -1) {
