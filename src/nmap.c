@@ -10,7 +10,6 @@ int nmap(t_raw_data *raw, char **args) {
     t_config    cfg;
     t_net       net;
     t_target    *target;
-    char        buff[INET_ADDRSTRLEN];
     long        start_time;
 
     if (build_config(raw, &cfg) == -1)
@@ -68,9 +67,8 @@ int nmap(t_raw_data *raw, char **args) {
             }
         }
 
-        inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
         printf("Scan took: %.5f secs\n", (double)((now_ms() - start_time) / 1000.0));
-        printf("IP address: %s\n", buff);
+        show_results(target, &cfg);
 
         target = target->next;
     }
