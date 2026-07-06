@@ -43,7 +43,14 @@ int nmap(t_raw_data *raw, char **args) {
             continue ;
         }
 
-        //  2. capture filter for this target
+        // 2. open pcap on the right interface for this target (lo vs default)
+        if (open_pcap(&net, iface_for_target(&net, target->ip)) == -1) {
+            cleanup_network(&net);
+            free_target(&cfg);
+            return (-1);
+        }
+
+        //  3. capture filter for this target
         if (set_filter(&net, target->ip) == -1) {
             fprintf(stderr, "ft_nmap: error: failed to set capture filter, aborting scan\n");
             cleanup_network(&net);
@@ -51,7 +58,7 @@ int nmap(t_raw_data *raw, char **args) {
             return (-1);
         }
 
-        //  3. for each port and each scan type, do a scan
+        //  4. scan every port with every requested scan type
         for (int i = 0; i < cfg.nb_ports; i++) {
             uint16_t port = cfg.ports[i];
 

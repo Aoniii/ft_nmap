@@ -14,6 +14,5 @@ MAIN_SRCS	+=	scan_one.c
 MAIN_SRCS	+=	scan_type_to_flags.c
 MAIN_SRCS	+=	send_packet.c
 MAIN_SRCS	+=	set_filter.c
-MAIN_SRCS	+=	setup_pcap.c
 MAIN_SRCS	+=	show.c
 MAIN_SRCS	+=	utils.c

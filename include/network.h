@@ -113,12 +113,14 @@ int             get_source_ip(struct in_addr target, struct in_addr *out);
 void            forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
 void            forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port);
 int             send_packet(int sock, char *buffer, size_t size, struct in_addr dest, uint16_t port);
-int             setup_pcap(t_net *net);
 int             set_filter(t_net *net, struct in_addr target);
 int             get_link_hdr_len(pcap_t *handle);
 struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
 uint8_t         scan_type_to_flags(int scan_type);
 t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type);
 t_state         scan_one_udp(t_net *net, struct in_addr target, uint16_t port);
+
+int open_pcap(t_net *net, const char *iface);
+const char  *iface_for_target(t_net *net, struct in_addr target);
 
 #endif
