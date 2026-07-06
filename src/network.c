@@ -80,6 +80,12 @@ int find_default_device(t_net *net) {
     return (0);
 }
 
+/**
+ * @brief setup_network - Sets up the shared network resources for the scan.
+ * Creates the raw TCP socket (requires root), enables IP_HDRINCL so we provide
+ * our own IP header, and finds the default capture interface. The pcap handle
+ * itself is opened later, per target, since the interface may differ.
+ */
 int setup_network(t_net *net) {
     int on = 1;
 
@@ -108,6 +114,11 @@ int setup_network(t_net *net) {
     return (0);
 }
 
+/**
+ * @brief cleanup_network - Releases all network resources.
+ * Closes the pcap handle and the raw socket, frees the device name, and resets
+ * the fields so a second call is safe (no double free / double close).
+ */
 void cleanup_network(t_net *net) {
     if (net->handle)
         pcap_close(net->handle);

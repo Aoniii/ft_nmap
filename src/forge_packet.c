@@ -17,36 +17,36 @@ void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint
     memset(buffer, 0, PACKET_SIZE);
 
     // ---- IP header ----
-    ip->version     = 4;
-    ip->ihl         = 5;
-    ip->tos         = 0;
-    ip->tot_len     = htons(PACKET_SIZE);
-    ip->id          = htons(0);
-    ip->frag_off    = 0;
-    ip->ttl         = 64;
-    ip->protocol    = 6;               // TCP
-    ip->check       = 0;               // kernel fills it (IP_HDRINCL)
-    ip->saddr       = src.s_addr;      // already network byte order
-    ip->daddr       = dest.s_addr;
+    ip->version     = 4;                                // IPv4 (the only version we handle)
+    ip->ihl         = 5;                                // 5 words = 20 bytes, header without options
+    ip->tos         = 0;                                // no special priority/handling requested
+    ip->tot_len     = htons(PACKET_SIZE);               // total size
+    ip->id          = htons(0);                         // no fragmentation
+    ip->frag_off    = 0;                                // not fragmenting, no offset
+    ip->ttl         = 64;                               // standard hop limit; high enough to reach any host
+    ip->protocol    = 6;                                // TCP
+    ip->check       = 0;                                // kernel fills it (IP_HDRINCL)
+    ip->saddr       = src.s_addr;                       // our IP, so the reply knows where to come back
+    ip->daddr       = dest.s_addr;                      // the target, used to routing
 
     // ---- TCP header ----
-    tcp->source     = htons(SRC_PORT);
-    tcp->dest       = htons(port);     // the scanned port
-    tcp->seq        = htonl(0);
-    tcp->ack_seq    = 0;
-    tcp->doff       = 5;
-    tcp->reserved   = 0;
-    tcp->flags      = flags;           // the scan type
-    tcp->window     = htons(1024);
-    tcp->check      = 0;               // must be 0 while computing the checksum
-    tcp->urg_ptr    = 0;
+    tcp->source     = htons(SRC_PORT);                  // our port; replies come back here
+    tcp->dest       = htons(port);                      // the scanned port
+    tcp->seq        = htonl(0);                         // initial sequence
+    tcp->ack_seq    = 0;                                // no acknowledgment
+    tcp->doff       = 5;                                // 5 words = 20 bytes, TCP header without options
+    tcp->reserved   = 0;                                // reserved bits must be 0
+    tcp->flags      = flags;                            // the scan type
+    tcp->window     = htons(1024);                      // advertised window; any plausible value works for a probe
+    tcp->check      = 0;                                // must be 0 while computing the checksum
+    tcp->urg_ptr    = 0;                                // no urgent data
 
     // ---- TCP checksum over pseudo-header + TCP header ----
-    pseudo.saddr    = src.s_addr;
-    pseudo.daddr    = dest.s_addr;
-    pseudo.zero     = 0;
-    pseudo.protocol = 6;
-    pseudo.tcp_len  = htons(sizeof(struct tcp_hdr));
+    pseudo.saddr    = src.s_addr;                       // pseudo-header ties the checksum to the real IPs...
+    pseudo.daddr    = dest.s_addr;                      // ...so a misrouted packet is detected and rejected
+    pseudo.zero     = 0;                                // mandatory padding byte
+    pseudo.protocol = 6;                                // TCP, must be match IP protocol field
+    pseudo.tcp_len  = htons(sizeof(struct tcp_hdr));    // length coverred by the checksum
 
     memcpy(pseudo_buf, &pseudo, sizeof(pseudo));
     memcpy(pseudo_buf + sizeof(pseudo), tcp, sizeof(struct tcp_hdr));
@@ -63,16 +63,16 @@ void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uin
     struct udp_hdr *udp = (struct udp_hdr *)(buffer + sizeof(struct ip_hdr));
 
     memset(buffer, 0, UDP_PACKET_SIZE);
-    ip->version  = 4;
-    ip->ihl      = 5;
-    ip->tot_len  = htons(UDP_PACKET_SIZE);
-    ip->ttl      = 64;
+    ip->version  = 4;                               // IPv4
+    ip->ihl      = 5;                               // 5 words = 20 bytes header with no options
+    ip->tot_len  = htons(UDP_PACKET_SIZE);          // IP + UDP total size
+    ip->ttl      = 64;                              // standard hop limit
     ip->protocol = 17;                              // UDP
-    ip->saddr    = src.s_addr;
-    ip->daddr    = dest.s_addr;
+    ip->saddr    = src.s_addr;                      // our IP
+    ip->daddr    = dest.s_addr;                     // the target
 
-    udp->source = htons(SRC_PORT);
-    udp->dest   = htons(port);
+    udp->source = htons(SRC_PORT);                  // our port
+    udp->dest   = htons(port);                      // the port we are probing
     udp->len    = htons(sizeof(struct udp_hdr));    // header only, no payload
     udp->check  = 0;                                // optional in IPv4
 }
