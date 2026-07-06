@@ -1,18 +1,23 @@
 #include "ft_nmap.h"
+#include "display.h"
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+static int  g_color = 0;
 
 /**
  * @brief show_target_ip - Prints the target IP(s) for the scan header.
  * Single target  -> inline: "Target Ip-Address: 1.2.3.4"
  * Several targets -> bullet list, one IP per line.
  */
-void show_target_ip(t_config cfg) {
+static void show_target_ip(t_config cfg) {
     t_target    *target;
     char        ip[INET_ADDRSTRLEN];
 
-    printf("Target Ip-Address: ");
+    printf(" ➔ Target: ");
     if (cfg.targets && !cfg.targets->next) {
         inet_ntop(AF_INET, &cfg.targets->ip, ip, sizeof(ip));
         printf("%s\n", ip);
@@ -31,14 +36,14 @@ void show_target_ip(t_config cfg) {
  * (e.g. "SYN/UDP/ACK").
  */
 
-void show_scan(t_config cfg) {
+static void show_scan(t_config cfg) {
     static const uint8_t    type_flag[] = {F_SYN, F_NULL, F_ACK, F_FIN, F_XMAS, F_UDP};
     static const char       *str_flag[] = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
 
     int     i;
     bool    is_first;
 
-    printf("Scans to be performed:");
+    printf(" ➔ Scans:");
     i = 0;
     is_first = true;
     while (i < 6) {
@@ -49,6 +54,14 @@ void show_scan(t_config cfg) {
         i++;
     }
     printf("\n");
+}
+
+void    show_config(t_config cfg) {
+    printf("Scan Configuration:\n");
+    show_target_ip(cfg);
+    printf(" ➔ Ports: %d\n", cfg.nb_ports);
+    show_scan(cfg);
+    printf(" ➔ Threads: %d\n", cfg.speedup); 
 }
 
 /**
@@ -62,6 +75,18 @@ static const char   *state_to_str(t_state state) {
         case STATE_UNFILTERED:    return ("Unfiltered");
         case STATE_OPEN_FILTERED: return ("Open|Filtered");
         default:                  return ("Unknown");
+    }
+}
+
+/**
+ * @brief state_color - ANSI color for a state (green open, red closed, yellow rest).
+ */
+static const char *state_color(t_state s) {
+    switch (s) {
+        case STATE_OPEN:       return (C_GREEN);
+        case STATE_UNFILTERED: return (C_BLUE);
+        case STATE_CLOSED:     return (C_RED);
+        default:               return (C_YELLOW);
     }
 }
 
@@ -89,58 +114,83 @@ static t_state  get_conclusion(t_port_result *pr, uint8_t scan_flags) {
 }
 
 /**
- * @brief print_results_line - Prints one port row: number, service, per-scan
- * results, and the final conclusion.
+ * @brief print_details - Prints per-scan results, grouping consecutive
+ * requested scans that share the same state (e.g. "FIN/XMAS:Open|Filtered").
  */
-static void print_results_line(t_port_result *pr, uint16_t port, uint8_t scan_flags, t_state conclusion) {
-    static const char *scan_names[] = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
-    struct servent    *serv;
-    const char        *service;
+static void print_details(t_port_result *pr, uint8_t flags) {
+    static const char *names[] = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
+    int first = 1;
 
-    // service name lookup (type only, not version)
-    serv = getservbyport(htons(port), "tcp");
-    service = serv ? serv->s_name : "Unassigned";
-
-    printf("%-8d %-18s ", port, service);
-
-    // per-scan results, e.g. "SYN(Open) NULL(Closed)"
+    printf("       %s└──%s ", C_DIM, C_RESET);
     for (int s = 0; s < SCAN_COUNT; s++) {
-        if (!(scan_flags & (1 << s)))
-            continue;
-        printf("%s(%s) ", scan_names[s], state_to_str(pr->results[s]));
-    }
+        if (!(flags & (1 << s)))
+            continue ;
 
-    printf("  %s\n", state_to_str(conclusion));
+        // group following requested scans sharing the same state
+        int  j = s;
+        char group[64];
+        strcpy(group, names[s]);
+        while (j + 1 < SCAN_COUNT) {
+            int k = j + 1;
+            if (!(flags & (1 << k))) { j++; continue; }
+            if (pr->results[k] != pr->results[s]) break;
+            strcat(group, "/");
+            strcat(group, names[k]);
+            j = k;
+        }
+        if (!first)
+            printf(" %s|%s ", C_DIM, C_RESET);
+        printf("%s:%s%s%s", group, state_color(pr->results[s]), state_to_str(pr->results[s]), C_RESET);
+        first = 0;
+        s = j;
+    }
+    printf("\n");
 }
 
 /**
- * @brief show_results - Prints the two result tables for one target:
- * open ports first, then closed/filtered/unfiltered ports.
+ * @brief print_duration - Prints an elapsed time in a readable unit.
+ * Under 1 second -> milliseconds, otherwise seconds with 2 decimals.
  */
-void show_results(t_target *target, t_config *cfg) {
+static void print_duration(long ms) {
+    if (ms < 1000)
+        printf("%ldms", ms);
+    else
+        printf("%.2fs", ms / 1000.0);
+}
+
+/**
+ * @brief show_results - Prints the scan results for one target: a summary
+ * line, then one line per port with its per-scan details. Colors are enabled
+ * only when stdout is a terminal (isatty), so redirection stays clean.
+ */
+void show_results(long elapsed, t_target *target, t_config *cfg) {
     char    buff[INET_ADDRSTRLEN];
-    t_state concl;
+    int     n_open = 0, n_closed = 0, n_other = 0;
 
-    inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
-    printf("IP address: %s\n", buff);
+    g_color = isatty(STDOUT_FILENO);
 
-    // ---- Open ports ----
-    printf("\nOpen ports:\n");
-    printf("Port     Service Name       Results / Conclusion\n");
-    printf("--------------------------------------------------------------\n");
     for (int i = 0; i < cfg->nb_ports; i++) {
-        concl = get_conclusion(&target->ports[i], cfg->scan_flags);
-        if (concl == STATE_OPEN)
-            print_results_line(&target->ports[i], cfg->ports[i], cfg->scan_flags, concl);
+        t_state c = get_conclusion(&target->ports[i], cfg->scan_flags);
+        if (c == STATE_OPEN) n_open++;
+        else if (c == STATE_CLOSED) n_closed++;
+        else n_other++;
     }
 
-    // ---- Closed / Filtered / Unfiltered ports ----
-    printf("\nClosed/Filtered/Unfiltered ports:\n");
-    printf("Port     Service Name       Results / Conclusion\n");
-    printf("--------------------------------------------------------------\n");
+    inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
+    printf("%s%s════════════════════════════════════════════════════════════════%s\n", C_CUT, C_DIM, C_RESET);
+    printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, target->name);
+    printf(" %s%d open%s · %s%d closed%s · %s%d filtered/other%s · %s", C_GREEN, n_open, C_RESET, C_RED, n_closed, C_RESET, C_YELLOW, n_other, C_RESET, C_BLUE);
+    print_duration(elapsed);
+    printf("%s\n", C_RESET);
+    printf("%s────────────────────────────────────────────────────────────────%s\n", C_DIM, C_RESET);
+
     for (int i = 0; i < cfg->nb_ports; i++) {
-        concl = get_conclusion(&target->ports[i], cfg->scan_flags);
-        if (concl != STATE_OPEN)
-            print_results_line(&target->ports[i], cfg->ports[i], cfg->scan_flags, concl);
+        t_state         concl = get_conclusion(&target->ports[i], cfg->scan_flags);
+        struct servent  *serv = getservbyport(htons(cfg->ports[i]), "tcp");
+        const char      *service = serv ? serv->s_name : "Unassigned";
+        const char      *mark = (concl == STATE_OPEN) ? "[+]" : "[-]";
+
+        printf(" %s%s%s   %-6d   %-15s %s→ %s%s%s\n", state_color(concl), mark, C_RESET, cfg->ports[i], service, C_DIM, state_color(concl), state_to_str(concl), C_RESET);
+        print_details(&target->ports[i], cfg->scan_flags);
     }
 }

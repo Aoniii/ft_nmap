@@ -25,12 +25,7 @@ int nmap(t_raw_data *raw, char **args) {
         return (-1);
     }
 
-    printf("Scan Configurations\n");
-    show_target_ip(cfg);
-    printf("No of Ports to scan: %d\n", cfg.nb_ports);
-    show_scan(cfg);
-    printf("No of threads: %d\n", cfg.speedup);
-
+    show_config(cfg);
     target = cfg.targets;
     while (target) {
         start_time = now_ms();
@@ -72,9 +67,7 @@ int nmap(t_raw_data *raw, char **args) {
             }
         }
 
-        printf("Scan took: %.5f secs\n", (double)((now_ms() - start_time) / 1000.0));
-        show_results(target, &cfg);
-
+        show_results(now_ms() - start_time, target, &cfg);
         target = target->next;
     }
 
