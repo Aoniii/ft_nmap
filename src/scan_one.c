@@ -79,7 +79,7 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
     // 1. forge and send the probe (capture is already listening via the filter)
     flags = scan_type_to_flags(scan_type);
     forge_packet(buffer, net->src_ip, target, port, flags);
-    if (send_packet(net->sock, buffer, target, port) == -1)
+    if (send_packet(net->sock, buffer, PACKET_SIZE, target, port) == -1)
         return (STATE_UNKNOWN);
 
     // 2. capture loop with a timeout: wait for a reply to THIS port
@@ -105,4 +105,50 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
 
     // no conclusive reply within the timeout
     return (no_reply_state(scan_type));
+}
+
+/**
+ * @brief scan_one_udp - Scans a single port with a UDP probe.
+ * Sends a UDP datagram and waits for a reply:
+ *   - ICMP type 3 code 3 (port unreachable)    -> closed
+ *   - a UDP reply                              -> open
+ *   - no reply within the timeout              -> open|filtered
+ */
+t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
+    char                buffer[UDP_PACKET_SIZE];
+    struct pcap_pkthdr  *header;
+    const u_char        *packet;
+    time_t              start;
+
+    forge_udp_packet(buffer, net->src_ip, target, port);
+    if (send_packet(net->sock, buffer, UDP_PACKET_SIZE, target, port) == -1)
+        return (STATE_UNKNOWN);
+
+    start = time(NULL);
+    while (time(NULL) - start < SCAN_TIMEOUT) {
+        if (pcap_next_ex(net->handle, &header, &packet) != 1)
+            continue ;
+
+        // read the IP header to know the protocol of the reply
+        struct ip_hdr *ip = (struct ip_hdr *)(packet + net->link_hdr_len);
+        int ip_hdr_len = ip->ihl * 4;
+
+        if (ip->protocol == 17) {
+            // a UDP reply from the target: port is open
+            return (STATE_OPEN);
+        }
+        if (ip->protocol == 1) {    // ICMP
+            struct icmp_hdr *icmp = (struct icmp_hdr *)
+                (packet + net->link_hdr_len + ip_hdr_len);
+            // type 3 = destination unreachable, code 3 = port unreachable
+            if (icmp->type == 3 && icmp->code == 3)
+                return (STATE_CLOSED);
+            // other ICMP unreachable codes (1,2,9,10,13) -> filtered
+            if (icmp->type == 3)
+                return (STATE_FILTERED);
+        }
+    }
+
+    // no reply -> can't tell open from filtered
+    return (STATE_OPEN_FILTERED);
 }

@@ -12,12 +12,12 @@
  */
 int set_filter(t_net *net, struct in_addr target) {
     struct bpf_program  fp;
-    char                filter[128];
+    char                filter[256];
     char                ip[INET_ADDRSTRLEN];
 
     // build the filter expression for this target
     inet_ntop(AF_INET, &target, ip, sizeof(ip));
-    snprintf(filter, sizeof(filter), "tcp and src host %s and dst port %d", ip, SRC_PORT);
+    snprintf(filter, sizeof(filter), "(tcp and src host %s and dst port %d) or (udp and src host %s and dst port %d) or (icmp and src host %s)", ip, SRC_PORT, ip, SRC_PORT, ip);
 
     // compile the text expression into a BPF program
     if (pcap_compile(net->handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN) == -1) {

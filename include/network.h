@@ -77,6 +77,22 @@ struct          pseudo_hdr {
     uint16_t    tcp_len;
 } __attribute__((packed));
 
+/* UDP header (8 bytes) */
+struct          udp_hdr {
+    uint16_t    source;     /* source port */
+    uint16_t    dest;       /* destination port (the scanned port) */
+    uint16_t    len;        /* lenght: UDP header + data */
+    uint16_t    check;      /* checksum (optional for IPv4, can be 0) */
+} __attribute__((packed));
+
+/* ICMP header (8 bytes) - only need the first fields to read type/code */
+struct          icmp_hdr {
+    uint8_t     type;       /* 3 = destination unreachable */
+    uint8_t     code;       /* 3 = port unreachable */
+    uint16_t    check;      /* checksum */
+    uint32_t    rest;       /* unused */
+} __attribute__((packed));
+
 /* TCP flag masks: one bit per flag, combined with OR for the scans */
 # define TH_FIN  0x01
 # define TH_SYN  0x02
@@ -85,21 +101,24 @@ struct          pseudo_hdr {
 # define TH_ACK  0x10
 # define TH_URG  0x20
 
-# define PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct tcp_hdr))
-# define SRC_PORT       49152       // port source local (éphémère)
-# define SCAN_TIMEOUT   2           // seconds to wait for a reply before "filtered"
+# define PACKET_SIZE        (sizeof(struct ip_hdr) + sizeof(struct tcp_hdr))
+# define UDP_PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct udp_hdr))
+# define SRC_PORT           49152       // port source local (éphémère)
+# define SCAN_TIMEOUT       2           // seconds to wait for a reply before "filtered"
 
 int             setup_network(t_net *net);
 void            cleanup_network(t_net *net);
 uint16_t        checksum(const void *data, size_t len);
 int             get_source_ip(struct in_addr target, struct in_addr *out);
 void            forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
-int             send_packet(int sock, char *buffer, struct in_addr dest, uint16_t port);
+void            forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port);
+int             send_packet(int sock, char *buffer, size_t size, struct in_addr dest, uint16_t port);
 int             setup_pcap(t_net *net);
 int             set_filter(t_net *net, struct in_addr target);
 int             get_link_hdr_len(pcap_t *handle);
 struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
-t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type);
 uint8_t         scan_type_to_flags(int scan_type);
+t_state         scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type);
+t_state         scan_one_udp(t_net *net, struct in_addr target, uint16_t port);
 
 #endif

@@ -56,13 +56,12 @@ int nmap(t_raw_data *raw, char **args) {
             uint16_t port = cfg.ports[i];
 
             for (int s = 0; s < SCAN_COUNT; s++) {
-                // Is this scan requested? (bit set in the bitmask)
                 if (!(cfg.scan_flags & (1 << s)))
                     continue ;
                 if (s == SCAN_UDP)
-                    continue ;
-
-                target->ports[i].results[s] = scan_one(&net, target->ip, port, s);;
+                    target->ports[i].results[s] = scan_one_udp(&net, target->ip, port);
+                else
+                    target->ports[i].results[s] = scan_one(&net, target->ip, port, s);;
             }
         }
 

@@ -52,3 +52,27 @@ void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint
     memcpy(pseudo_buf + sizeof(pseudo), tcp, sizeof(struct tcp_hdr));
     tcp->check = checksum(pseudo_buf, sizeof(pseudo_buf));
 }
+
+/**
+ * @brief forge_udp_packet - Builds an IP+UDP packet into buffer.
+ * UDP checksum is optional in IPv4 so we leave it at 0. The IP checksum is
+ * filled by the kernel (IP_HDRINCL).
+ */
+void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port) {
+    struct ip_hdr  *ip = (struct ip_hdr *)buffer;
+    struct udp_hdr *udp = (struct udp_hdr *)(buffer + sizeof(struct ip_hdr));
+
+    memset(buffer, 0, UDP_PACKET_SIZE);
+    ip->version  = 4;
+    ip->ihl      = 5;
+    ip->tot_len  = htons(UDP_PACKET_SIZE);
+    ip->ttl      = 64;
+    ip->protocol = 17;                              // UDP
+    ip->saddr    = src.s_addr;
+    ip->daddr    = dest.s_addr;
+
+    udp->source = htons(SRC_PORT);
+    udp->dest   = htons(port);
+    udp->len    = htons(sizeof(struct udp_hdr));    // header only, no payload
+    udp->check  = 0;                                // optional in IPv4
+}
