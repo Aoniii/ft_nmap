@@ -106,6 +106,7 @@ struct          icmp_hdr {
 # define SRC_PORT           49152       // port source local (éphémère)
 # define SCAN_TIMEOUT       2           // seconds to wait for a reply before "filtered"
 # define UDP_TIMEOUT        5           // UDP needs longer: ICMP replies are rate-limited
+# define UDP_RETY           3           // retransmit to beat ICMP rate-limiting
 
 /* checksum.c */
 uint16_t    checksum(const void *data, size_t len);

@@ -122,47 +122,49 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
     const u_char        *packet;
     time_t              start;
 
-    forge_udp_packet(buffer, net->src_ip, target, port);
-    if (send_packet(net->sock, buffer, UDP_PACKET_SIZE, target, port) == -1)
-        return (STATE_UNKNOWN);
+    for (int attempt = 0; attempt < UDP_RETY; attempt++) {
+        forge_udp_packet(buffer, net->src_ip, target, port);
+        if (send_packet(net->sock, buffer, UDP_PACKET_SIZE, target, port) == -1)
+            return (STATE_UNKNOWN);
 
-    start = time(NULL);
-    while (time(NULL) - start < UDP_TIMEOUT) {
-        if (pcap_next_ex(net->handle, &header, &packet) != 1)
-            continue ;
+        start = time(NULL);
+        while (time(NULL) - start < UDP_TIMEOUT) {
+            if (pcap_next_ex(net->handle, &header, &packet) != 1)
+                continue ;
 
-        // read the IP header to know the protocol of the reply
-        struct ip_hdr *ip = (struct ip_hdr *)(packet + net->link_hdr_len);
-        int ip_hdr_len = ip->ihl * 4;
+            // read the IP header to know the protocol of the reply
+            struct ip_hdr *ip = (struct ip_hdr *)(packet + net->link_hdr_len);
+            int ip_hdr_len = ip->ihl * 4;
 
-        if (ip->protocol == 17) {   // direct UDP reply -> open
-            // check it's addressed to OUR udp source port
-            struct udp_hdr *udp = (struct udp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
-            if (ntohs(udp->dest) != SRC_PORT + SCAN_UDP)
-                continue;           // reply for another thread
-            // and that it comes from the port we scanned
-            if (ntohs(udp->source) != port)
-                continue;
-            return (STATE_OPEN);
-        }
-        if (ip->protocol == 1) {    // ICMP
-            struct icmp_hdr *icmp = (struct icmp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
-            struct ip_hdr  *orig_ip = (struct ip_hdr *)(packet + net->link_hdr_len + ip_hdr_len + sizeof(struct icmp_hdr));
-            int orig_ip_len = orig_ip->ihl * 4;
-            struct udp_hdr *orig_udp = (struct udp_hdr *)
-            ((char *)orig_ip + orig_ip_len);
+            if (ip->protocol == 17) {   // direct UDP reply -> open
+                // check it's addressed to OUR udp source port
+                struct udp_hdr *udp = (struct udp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
+                if (ntohs(udp->dest) != SRC_PORT + SCAN_UDP)
+                    continue;           // reply for another thread
+                // and that it comes from the port we scanned
+                if (ntohs(udp->source) != port)
+                    continue;
+                return (STATE_OPEN);
+            }
+            if (ip->protocol == 1) {    // ICMP
+                struct icmp_hdr *icmp = (struct icmp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
+                struct ip_hdr  *orig_ip = (struct ip_hdr *)(packet + net->link_hdr_len + ip_hdr_len + sizeof(struct icmp_hdr));
+                int orig_ip_len = orig_ip->ihl * 4;
+                struct udp_hdr *orig_udp = (struct udp_hdr *)
+                    ((char *)orig_ip + orig_ip_len);
 
-            // is this ICMP about OUR probe? (copied UDP dest = the port we scanned)
-            if (ntohs(orig_udp->dest) != port)
-                continue ;  // ICMP for another port, keep listening
+                // is this ICMP about OUR probe? (copied UDP dest = the port we scanned)
+                if (ntohs(orig_udp->dest) != port)
+                    continue ;  // ICMP for another port, keep listening
 
-            // type 3 = destination unreachable, code 3 = port unreachable
-            if (icmp->type == 3 && icmp->code == 3)
-                return (STATE_CLOSED);
+                // type 3 = destination unreachable, code 3 = port unreachable
+                if (icmp->type == 3 && icmp->code == 3)
+                    return (STATE_CLOSED);
 
-            // other ICMP unreachable codes (1,2,9,10,13) -> filtered
-            if (icmp->type == 3)
-                return (STATE_FILTERED);
+                // other ICMP unreachable codes (1,2,9,10,13) -> filtered
+                if (icmp->type == 3)
+                    return (STATE_FILTERED);
+            }
         }
     }
 
