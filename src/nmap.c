@@ -1,16 +1,25 @@
-#include "ft_nmap.h"
 #include "network.h"
 #include "config.h"
 #include "display.h"
+#include "worker.h"
 #include <arpa/inet.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+static void cleanup(t_work_queue *q, t_net *net, t_config *cfg) {
+    pthread_mutex_destroy(&q->lock);
+    cleanup_network(net);
+    free_target(cfg);
+}
 
 int nmap(t_raw_data *raw, char **args) {
-    t_config    cfg;
-    t_net       net;
-    t_target    *target;
-    long        start_time;
+    t_target        *target;
+    t_config        cfg;
+    t_net           net;
+    t_work_queue    q;
+    long            start_time;
 
     if (build_config(raw, &cfg) == -1)
         return (-1);
@@ -25,9 +34,20 @@ int nmap(t_raw_data *raw, char **args) {
         return (-1);
     }
 
+    if (queue_init(&q, &net, &cfg) == -1) {
+        fprintf(stderr, "ft_nmap: error: failed to initialize work queue\n");
+        cleanup_network(&net);
+        free_target(&cfg);
+        return (-1);
+    }
+
     show_config(cfg);
     target = cfg.targets;
+
     while (target) {
+        q.target = target;
+        q.next_task = 0;
+
         start_time = now_ms();
         printf("\nScanning: %s\n", target->name);
 
@@ -40,38 +60,48 @@ int nmap(t_raw_data *raw, char **args) {
 
         // 2. open pcap on the right interface for this target (lo vs default)
         if (open_pcap(&net, iface_for_target(&net, target->ip)) == -1) {
-            cleanup_network(&net);
-            free_target(&cfg);
+            cleanup(&q, &net, &cfg);
             return (-1);
         }
 
         //  3. capture filter for this target
         if (set_filter(&net, target->ip) == -1) {
             fprintf(stderr, "ft_nmap: error: failed to set capture filter, aborting scan\n");
-            cleanup_network(&net);
-            free_target(&cfg);
+            cleanup(&q, &net, &cfg);
             return (-1);
         }
 
-        //  4. scan every port with every requested scan type
-        for (int i = 0; i < cfg.nb_ports; i++) {
-            uint16_t port = cfg.ports[i];
-
-            for (int s = 0; s < SCAN_COUNT; s++) {
-                if (!(cfg.scan_flags & (1 << s)))
-                    continue ;
-                if (s == SCAN_UDP)
-                    target->ports[i].results[s] = scan_one_udp(&net, target->ip, port);
-                else
-                    target->ports[i].results[s] = scan_one(&net, target->ip, port, s);;
+        //  4. run the scan: mono-thread if speedup is 0, else N worker threads
+        if (cfg.speedup == 0) {
+            // mono-thread: the main thread is the only worker
+            worker(&q);
+        } else {
+            // multi-thread: create N workers and wait for them
+            pthread_t *threads = malloc(sizeof(pthread_t) * cfg.speedup);
+            if (!threads) {
+                fprintf(stderr, "ft_nmap: error: failed to alloc threads, aborting scan\n");
+                cleanup(&q, &net, &cfg);
+                return (-1);
             }
+
+            int created = 0;
+            for (int i = 0; i < cfg.speedup; i++) {
+                if (pthread_create(&threads[i], NULL, worker, &q) != 0)
+                    break ;     // stop at the first failure
+                created++;
+            }
+
+            // join only the threads we created
+            for (int i = 0; i < created; i++)
+                pthread_join(threads[i], NULL);
+
+            free(threads);
         }
 
         show_results(now_ms() - start_time, target, &cfg);
         target = target->next;
     }
 
-    cleanup_network(&net);
-    free_target(&cfg);
+    cleanup(&q, &net, &cfg);
     return (0);
 }
