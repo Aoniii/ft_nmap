@@ -1,3 +1,4 @@
+#include "ft_nmap.h"
 #include "network.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -17,7 +18,13 @@ int set_filter(t_net *net, struct in_addr target) {
 
     // build the filter expression for this target
     inet_ntop(AF_INET, &target, ip, sizeof(ip));
-    snprintf(filter, sizeof(filter), "(tcp and src host %s and dst port %d) or (udp and src host %s and dst port %d) or (icmp and src host %s)", ip, SRC_PORT, ip, SRC_PORT, ip);
+    snprintf(filter, sizeof(filter),
+             "(tcp and src host %s and dst portrange %d-%d) or "
+             "(udp and src host %s and dst portrange %d-%d) or "
+             "(icmp and src host %s)",
+             ip, SRC_PORT, SRC_PORT + SCAN_COUNT - 1,
+             ip, SRC_PORT, SRC_PORT + SCAN_COUNT - 1,
+             ip);
 
     // compile the text expression into a BPF program
     if (pcap_compile(net->handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN) == -1) {

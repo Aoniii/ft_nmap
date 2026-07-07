@@ -1,5 +1,7 @@
+#include "ft_nmap.h"
 # include "network.h"
 # include <netinet/in.h>
+# include <stdint.h>
 # include <string.h>
 
 /**
@@ -8,7 +10,7 @@
  * temporary pseudo-header + the TCP header. The IP checksum is left at 0
  * (the kernel fills it thanks to IP_HDRINCL).
  */
-void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags) {
+void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags) {
     struct ip_hdr       *ip = (struct ip_hdr *)buffer;
     struct tcp_hdr      *tcp = (struct tcp_hdr *)(buffer + sizeof(struct ip_hdr));
     struct pseudo_hdr   pseudo;
@@ -30,7 +32,7 @@ void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint
     ip->daddr       = dest.s_addr;                      // the target, used to routing
 
     // ---- TCP header ----
-    tcp->source     = htons(SRC_PORT);                  // our port; replies come back here
+    tcp->source     = htons(src_port);                  // our port; replies come back here
     tcp->dest       = htons(port);                      // the scanned port
     tcp->seq        = htonl(0);                         // initial sequence
     tcp->ack_seq    = 0;                                // no acknowledgment
@@ -71,7 +73,7 @@ void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uin
     ip->saddr    = src.s_addr;                      // our IP
     ip->daddr    = dest.s_addr;                     // the target
 
-    udp->source = htons(SRC_PORT);                  // our port
+    udp->source = htons(SRC_PORT + SCAN_UDP);       // our port
     udp->dest   = htons(port);                      // the port we are probing
     udp->len    = htons(sizeof(struct udp_hdr));    // header only, no payload
     udp->check  = 0;                                // optional in IPv4

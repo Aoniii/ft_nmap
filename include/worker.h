@@ -17,11 +17,12 @@ typedef struct      s_work_queue {
     t_net           *net;                       // shared network resources
     t_target        *target;                    // current target being scanned
     t_config        *cfg;                       // config (ports, scan_flags)
+    pthread_mutex_t lock;                       // protects next_task
     int             active_scans[SCAN_COUNT];   // request scan types, in order
     int             nb_scans;                   // how many are requested
     int             next_task;                  // next task index to hand out
     int             total_tasks;                // nb_ports * nb_scans
-    pthread_mutex_t lock;                       // protects next_task
+    int             error;                      // set by any worker that fails pcap setup
 }                   t_work_queue;
 
 int     queue_init(t_work_queue *q, t_net *net, t_config *cfg);

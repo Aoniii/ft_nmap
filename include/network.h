@@ -105,12 +105,13 @@ struct          icmp_hdr {
 # define UDP_PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct udp_hdr))
 # define SRC_PORT           49152       // port source local (éphémère)
 # define SCAN_TIMEOUT       2           // seconds to wait for a reply before "filtered"
+# define UDP_TIMEOUT        5           // UDP needs longer: ICMP replies are rate-limited
 
 /* checksum.c */
 uint16_t    checksum(const void *data, size_t len);
 
 /* forge_packet.c */
-void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, uint8_t flags);
+void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags);
 void    forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port);
 
 /* get_link_hdr_len.c */

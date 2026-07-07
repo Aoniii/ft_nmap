@@ -58,20 +58,7 @@ int nmap(t_raw_data *raw, char **args) {
             continue ;
         }
 
-        // 2. open pcap on the right interface for this target (lo vs default)
-        if (open_pcap(&net, iface_for_target(&net, target->ip)) == -1) {
-            cleanup(&q, &net, &cfg);
-            return (-1);
-        }
-
-        //  3. capture filter for this target
-        if (set_filter(&net, target->ip) == -1) {
-            fprintf(stderr, "ft_nmap: error: failed to set capture filter, aborting scan\n");
-            cleanup(&q, &net, &cfg);
-            return (-1);
-        }
-
-        //  4. run the scan: mono-thread if speedup is 0, else N worker threads
+        //  2. run the scan: mono-thread if speedup is 0, else N worker threads
         if (cfg.speedup == 0) {
             // mono-thread: the main thread is the only worker
             worker(&q);
@@ -96,6 +83,12 @@ int nmap(t_raw_data *raw, char **args) {
                 pthread_join(threads[i], NULL);
 
             free(threads);
+        }
+
+        if (q.error) {
+            fprintf(stderr, "ft_nmap: error: pcap setup failed, aborting\n");
+            cleanup(&q, &net, &cfg);
+            return (-1);
         }
 
         show_results(now_ms() - start_time, target, &cfg);

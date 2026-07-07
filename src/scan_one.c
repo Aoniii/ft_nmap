@@ -73,12 +73,14 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
     struct pcap_pkthdr  *header;
     const u_char        *packet;
     uint8_t             flags;
+    uint16_t            src_port;
     time_t              start;
     t_state             st;
 
     // 1. forge and send the probe (capture is already listening via the filter)
     flags = scan_type_to_flags(scan_type);
-    forge_packet(buffer, net->src_ip, target, port, flags);
+    src_port = SRC_PORT + scan_type;
+    forge_packet(buffer, net->src_ip, target, src_port, port, flags);
     if (send_packet(net->sock, buffer, PACKET_SIZE, target, port) == -1)
         return (STATE_UNKNOWN);
 
@@ -94,7 +96,7 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
             continue ;
 
         // is this the reply to the port we just probed?
-        if (ntohs(tcp->source) != port)
+        if (ntohs(tcp->source) != port || ntohs(tcp->dest) != src_port)
             continue ;   // reply for another port, keep waiting
 
         st = interpret_tcp(scan_type, tcp);
@@ -125,7 +127,7 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
         return (STATE_UNKNOWN);
 
     start = time(NULL);
-    while (time(NULL) - start < SCAN_TIMEOUT) {
+    while (time(NULL) - start < UDP_TIMEOUT) {
         if (pcap_next_ex(net->handle, &header, &packet) != 1)
             continue ;
 
@@ -133,16 +135,31 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
         struct ip_hdr *ip = (struct ip_hdr *)(packet + net->link_hdr_len);
         int ip_hdr_len = ip->ihl * 4;
 
-        if (ip->protocol == 17) {
-            // a UDP reply from the target: port is open
+        if (ip->protocol == 17) {   // direct UDP reply -> open
+            // check it's addressed to OUR udp source port
+            struct udp_hdr *udp = (struct udp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
+            if (ntohs(udp->dest) != SRC_PORT + SCAN_UDP)
+                continue;           // reply for another thread
+            // and that it comes from the port we scanned
+            if (ntohs(udp->source) != port)
+                continue;
             return (STATE_OPEN);
         }
         if (ip->protocol == 1) {    // ICMP
-            struct icmp_hdr *icmp = (struct icmp_hdr *)
-                (packet + net->link_hdr_len + ip_hdr_len);
+            struct icmp_hdr *icmp = (struct icmp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
+            struct ip_hdr  *orig_ip = (struct ip_hdr *)(packet + net->link_hdr_len + ip_hdr_len + sizeof(struct icmp_hdr));
+            int orig_ip_len = orig_ip->ihl * 4;
+            struct udp_hdr *orig_udp = (struct udp_hdr *)
+            ((char *)orig_ip + orig_ip_len);
+
+            // is this ICMP about OUR probe? (copied UDP dest = the port we scanned)
+            if (ntohs(orig_udp->dest) != port)
+                continue ;  // ICMP for another port, keep listening
+
             // type 3 = destination unreachable, code 3 = port unreachable
             if (icmp->type == 3 && icmp->code == 3)
                 return (STATE_CLOSED);
+
             // other ICMP unreachable codes (1,2,9,10,13) -> filtered
             if (icmp->type == 3)
                 return (STATE_FILTERED);
