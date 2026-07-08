@@ -119,30 +119,33 @@ static t_state  get_conclusion(t_port_result *pr, uint8_t scan_flags) {
  */
 static void print_details(t_port_result *pr, uint8_t flags) {
     static const char *names[] = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
+    int done[SCAN_COUNT] = {0};
     int first = 1;
 
     printf("       %s└──%s ", C_DIM, C_RESET);
     for (int s = 0; s < SCAN_COUNT; s++) {
-        if (!(flags & (1 << s)))
+        if (!(flags & (1 << s)) || done[s])
             continue ;
 
-        // group following requested scans sharing the same state
-        int  j = s;
+        // start a group with scan s, then gather every other requested scan
+        // that shares the same state, regardless of position
         char group[64];
         strcpy(group, names[s]);
-        while (j + 1 < SCAN_COUNT) {
-            int k = j + 1;
-            if (!(flags & (1 << k))) { j++; continue; }
-            if (pr->results[k] != pr->results[s]) break;
-            strcat(group, "/");
-            strcat(group, names[k]);
-            j = k;
+        done[s] = 1;
+        for (int i = s + 1; i < SCAN_COUNT; i++) {
+            if (!(flags & (1 << i)) || done[i])
+                continue ;
+
+            if (pr->results[i] == pr->results[s]) {
+                strcat(group, "/");
+                strcat(group, names[i]);
+                done[i] = 1;
+            }
         }
         if (!first)
             printf(" %s|%s ", C_DIM, C_RESET);
         printf("%s:%s%s%s", group, state_color(pr->results[s]), state_to_str(pr->results[s]), C_RESET);
         first = 0;
-        s = j;
     }
     printf("\n");
 }
@@ -190,7 +193,11 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
         const char      *service = serv ? serv->s_name : "Unassigned";
         const char      *mark = (concl == STATE_OPEN) ? "[+]" : "[-]";
 
-        printf(" %s%s%s   %-6d   %-15s %s→ %s%s%s\n", state_color(concl), mark, C_RESET, cfg->ports[i], service, C_DIM, state_color(concl), state_to_str(concl), C_RESET);
+        printf(" %s%s%s   %-6d   %-15s %s→%s %s%s%s%s\n",
+               state_color(concl), mark, C_RESET,
+               cfg->ports[i], service,
+               C_DIM, C_RESET,
+               C_BOLD, state_color(concl), state_to_str(concl), C_RESET);
         print_details(&target->ports[i], cfg->scan_flags);
     }
 }
