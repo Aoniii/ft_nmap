@@ -1,7 +1,7 @@
 #ifndef FT_NMAP_H
 # define FT_NMAP_H
 
-# define POSITIONAL_TARGET  0
+# define POSITIONAL_TARGET  1
 
 # include <stdbool.h>
 # include <stdint.h>
