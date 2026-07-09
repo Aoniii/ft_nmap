@@ -53,7 +53,7 @@ int nmap(t_raw_data *raw, char **args) {
 
         //  1. IP source for this target
         if (get_source_ip(target->ip, &net.src_ip) != 0) {
-            fprintf(stderr, "ft_nmap: warning: cannot reach %s, skipping\n", target->name);
+            fprintf(stderr, "ft_nmap: warning: cannot reach %s\n", target->name);
             target = target->next;
             continue ;
         }

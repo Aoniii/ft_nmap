@@ -8,17 +8,19 @@ int main(int argc, char **argv) {
 
     t_parser_info   info = {
         .program        = argv[0],
+        #if POSITIONAL_TARGET
         .usage          = "[OPTIONS] <ip|hostname>... or --file FILE",
+        #else
+        .usage          = "[OPTIONS] --ip <ip|hostname> or --file FILE",
+        #endif
         .description    = "\nft_nmap - a multithreaded port scanner.\n"
                           "Scans the given targets using raw sockets and pcap,\n"
                           "reporting the state of each port per scan type.\n",
-        .footer         = "\nTargets may be IPv4 addresses or hostnames, given as\n"
-                          "arguments or listed in a file (--file).\n"
-                          "\n"
-                          "Made by snourry & stales - https://github.com/Aoniii/ft_nmap\n"
+        .footer         = "\nMade by snourry & stales - https://github.com/Aoniii/ft_nmap\n"
     };
 
     t_raw_data  data = {
+        .ip = NULL,
         .file = NULL,
         .port = NULL,
         .scan = NULL,
@@ -26,6 +28,15 @@ int main(int argc, char **argv) {
     };
 
     t_option    options[] = {
+        #if !POSITIONAL_TARGET
+        {
+            .short_opt  = 0,
+            .long_opt   = "ip",
+            .flags      = OPT_LONG | TYPE_STRING,
+            .value      = &data.ip,
+            .help       = "ip address to scan"
+        },
+        #endif
         {
             .short_opt  = 'f',
             .long_opt   = "file",

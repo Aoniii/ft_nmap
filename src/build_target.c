@@ -145,6 +145,42 @@ static int  file_target(t_target **last, t_config *cfg, char *file, char **err) 
 }
 
 /**
+ * @brief check_ip_mode - Validates target input when POSITIONAL_TARGET is 0.
+ * In this mode targets come from --ip or --file only:
+ *   - positional arguments are rejected
+ *   - exactly one of --ip / --file must be given (not both, not none)
+ * Then adds the --ip target to the list. Returns 0 on success, -1 on error.
+ */
+#if !POSITIONAL_TARGET
+static int check_ip_mode(t_raw_data *raw, t_config *cfg, char **args, t_target **last, char **err_ptr) {
+    // 1. no positional arguments allowed in this mode
+    if (args && args[0]) {
+        fprintf(stderr, "ft_nmap: error: unexpected argument '%s'. Use --ip to specify a target.\n", args[0]);
+        return (-1);
+    }
+
+    // 2. exactly one of --ip / --file must be provided
+    if (!raw->ip && !raw->file) {
+        fprintf(stderr, "ft_nmap: error: no target specified. Use --ip or --file.\n");
+        return (-1);
+    }
+    if (raw->ip && raw->file) {
+        fprintf(stderr, "ft_nmap: error: --ip and --file are mutually exclusive.\n");
+        return (-1);
+    }
+
+    // 3. add the --ip target (if that's the one given)
+    if (raw->ip) {
+        if (add_target(last, cfg, raw->ip, err_ptr) == -1) {
+            fprintf(stderr, "ft_nmap: error: %s\n", *err_ptr);
+            return (-1);
+        }
+    }
+    return (0);
+}
+#endif
+
+/**
  * @brief build_target - Builds the target list from positionals and/or file.
  * Adds positional arguments (IP/hostnames) first, then targets from --file.
  * Requires at least one valid target. On any failure the caller is expected
@@ -154,12 +190,12 @@ int build_target(t_raw_data *raw, t_config *cfg, char **args) {
     char        err[1024];
     char        *err_ptr;
     t_target    *last;
-    int         i;
 
     err_ptr = err;
     cfg->targets = NULL;
     last = NULL;
 
+    #if POSITIONAL_TARGET
     // nothing to scan at all
     if ((!args || !args[0]) && !raw->file) {
         fprintf(stderr, "ft_nmap: error: No target specified. Use an IP/hostname or --file.\n");
@@ -167,7 +203,7 @@ int build_target(t_raw_data *raw, t_config *cfg, char **args) {
     }
 
     // positional targets (IP/hostnames, nmap-style)
-    i = 0;
+    int i = 0;
     while (args && args[i]) {
         if (add_target(&last, cfg, args[i], &err_ptr) == -1) {
             fprintf(stderr, "ft_nmap: error: %s\n", err);
@@ -175,6 +211,11 @@ int build_target(t_raw_data *raw, t_config *cfg, char **args) {
         }
         i++;
     }
+    #else
+    // mode --ip / --file only
+    if (check_ip_mode(raw, cfg, args, &last, &err_ptr) == -1)
+        return (-1);
+    #endif
 
     // targets from --file
     if (raw->file) {

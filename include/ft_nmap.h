@@ -1,11 +1,14 @@
 #ifndef FT_NMAP_H
 # define FT_NMAP_H
 
+# define POSITIONAL_TARGET  0
+
 # include <stdbool.h>
 # include <stdint.h>
 # include <netinet/in.h>
 
 typedef struct  s_raw_data {
+    char        *ip;
     char        *file;
     char        *port;
     char        *scan;
