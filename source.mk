@@ -10,6 +10,7 @@ MAIN_SRCS	+=	network.c
 MAIN_SRCS	+=	nmap.c
 MAIN_SRCS	+=	parse_port.c
 MAIN_SRCS	+=	parse_scan.c
+MAIN_SRCS	+=	reverse_dns.c
 MAIN_SRCS	+=	scan_one.c
 MAIN_SRCS	+=	scan_type_to_flags.c
 MAIN_SRCS	+=	send_packet.c

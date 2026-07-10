@@ -168,6 +168,7 @@ static void print_duration(long ms) {
  */
 void show_results(long elapsed, t_target *target, t_config *cfg) {
     char    buff[INET_ADDRSTRLEN];
+    char    host[NI_MAXHOST];
     int     n_open = 0, n_closed = 0, n_other = 0;
 
     g_color = isatty(STDOUT_FILENO);
@@ -181,7 +182,12 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
 
     inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
     printf("%s%s════════════════════════════════════════════════════════════════%s\n", C_CUT, C_DIM, C_RESET);
-    printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, target->name);
+
+    if (!cfg->no_dns && reverse_dns(target->ip, host, sizeof(host)))
+        printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, host);
+    else
+        printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, target->name);
+
     printf(" %s%d open%s · %s%d closed%s · %s%d filtered/other%s · %s", C_GREEN, n_open, C_RESET, C_RED, n_closed, C_RESET, C_YELLOW, n_other, C_RESET, C_BLUE);
     print_duration(elapsed);
     printf("%s\n", C_RESET);

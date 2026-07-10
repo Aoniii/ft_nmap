@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
         .port = NULL,
         .scan = NULL,
         .speedup = 0,
+        .no_dns = false,
     };
 
     t_option    options[] = {
@@ -49,21 +50,28 @@ int main(int argc, char **argv) {
             .long_opt   = "ports",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.port,
-            .help       = "ports to scan (eg: 1-10 or 1,2,3 or 1,5-15)"
+            .help       = "ports to scan (eg: 1-10 or 1,2,3 or 1,5-15) (max: 1024 ports)"
         },
         {
             .short_opt  = 's',
             .long_opt   = "scan",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.scan,
-            .help       = "SYN/NULL/FIN/XMAS/ACK/UDP"
+            .help       = "SYN/NULL/FIN/XMAS/ACK/UDP (default: all)"
         },
         {
             .short_opt  = 0,
             .long_opt   = "speedup",
             .flags      = OPT_LONG | TYPE_INT,
             .value      = &data.speedup,
-            .help       = "[250 max] number of parallel threads to use"
+            .help       = "number of parallel threads to use (max: 250)"
+        },
+        {
+            .short_opt  = 'n',
+            .long_opt   = "no-dns",
+            .flags      = OPT_LONG | OPT_SHORT | TYPE_BOOLEAN,
+            .value      = &data.no_dns,
+            .help       = "Disable reverse DNS resolution"
         },
         {
 			.short_opt  = 0,

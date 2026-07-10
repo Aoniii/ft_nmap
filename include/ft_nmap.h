@@ -13,6 +13,7 @@ typedef struct  s_raw_data {
     char        *port;
     char        *scan;
     int         speedup;
+    bool        no_dns;
 }               t_raw_data;
 
 typedef enum    e_state {
@@ -42,6 +43,7 @@ typedef struct  s_config {
     int         nb_ports;
     uint8_t     scan_flags;
     int         speedup;
+    bool        no_dns;
 }               t_config;
 
 enum    e_scan_type {
@@ -62,6 +64,8 @@ enum    e_scan_type {
 # define F_UDP  (1 << SCAN_UDP)
 # define F_ALL  (F_SYN|F_NULL|F_ACK|F_FIN|F_XMAS|F_UDP)
 
-int     nmap(t_raw_data *raw, char **args);
+int nmap(t_raw_data *raw, char **args);
+
+int reverse_dns(struct in_addr ip, char *host, size_t hostlen);
 
 #endif
