@@ -30,13 +30,14 @@ int main(int argc, char **argv) {
     };
 
     t_option    options[] = {
+        CATEGORY("Target Specification\n"),
         #if !POSITIONAL_TARGET
         {
             .short_opt  = 0,
             .long_opt   = "ip",
             .flags      = OPT_LONG | TYPE_STRING,
             .value      = &data.ip,
-            .help       = "ip address to scan"
+            .help       = "Single IP address or hostname to scan"
         },
         #endif
         {
@@ -44,43 +45,48 @@ int main(int argc, char **argv) {
             .long_opt   = "file",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.file,
-            .help       = "file name containing IP addresses to scan"
+            .help       = "Read targets from a file"
         },
+        CATEGORY("Scan Options\n"),
         {
             .short_opt  = 'p',
             .long_opt   = "ports",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.port,
-            .help       = "ports to scan (eg: 1-10 or 1,2,3 or 1,5-15) (max: 1024 ports)"
+            .help       = "Ports to scan: 1-1024, 80,443 or 1,5-15 (default: 1-1024, max: 1024)"
         },
         {
             .short_opt  = 's',
             .long_opt   = "scan",
             .flags      = OPT_SHORT | OPT_LONG | TYPE_STRING,
             .value      = &data.scan,
-            .help       = "SYN/NULL/FIN/XMAS/ACK/UDP (default: all)"
+            .help       = "Scan types: SYN/NULL/FIN/XMAS/ACK/UDP, '/'-separated (default: all)"
         },
+        CATEGORY("Performance\n"),
         {
             .short_opt  = 0,
             .long_opt   = "speedup",
             .flags      = OPT_LONG | TYPE_INT,
             .value      = &data.speedup,
-            .help       = "number of parallel threads to use (max: 250)"
+            .help       = "Number of parallel threads (0 = single-threaded, max: 250)"
         },
+        CATEGORY("Resolution\n"),
         {
             .short_opt  = 0,
             .long_opt   = "reverse-dns",
             .flags      = OPT_LONG | TYPE_BOOLEAN,
             .value      = &data.dns,
-            .help       = "Enable reverse DNS resolution"
+            .help       = "Resolve IP addresses back to hostnames (slower)"
         },
-                {
+        CATEGORY("Display\n"),
+        {
             .short_opt  = 0,
             .long_opt   = "open",
             .flags      = OPT_LONG | TYPE_BOOLEAN,
             .value      = &data.open,
-            .help       = "Display only open ports"
+            .help       = "Show only open ports, hide closed and filtered"
         },
+        CATEGORY("Misc\n"),
         {
 			.short_opt  = 0,
 			.long_opt   = "help",
@@ -92,7 +98,7 @@ int main(int argc, char **argv) {
 					.options = options
 				}
 			},
-			.help       = "print this help screen"
+			.help       = "Print this help screen and exit"
 		},
         {0}
     };
