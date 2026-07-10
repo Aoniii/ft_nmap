@@ -13,7 +13,8 @@ typedef struct  s_raw_data {
     char        *port;
     char        *scan;
     int         speedup;
-    bool        no_dns;
+    bool        dns;
+    bool        open;
 }               t_raw_data;
 
 typedef enum    e_state {
@@ -43,7 +44,8 @@ typedef struct  s_config {
     int         nb_ports;
     uint8_t     scan_flags;
     int         speedup;
-    bool        no_dns;
+    bool        dns;
+    bool        open;
 }               t_config;
 
 enum    e_scan_type {

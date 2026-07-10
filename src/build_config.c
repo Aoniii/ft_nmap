@@ -36,6 +36,7 @@ int build_config(t_raw_data *raw, t_config *cfg) {
         return (-1);
     }
 
-    cfg->no_dns = raw->no_dns;
+    cfg->dns = raw->dns;
+    cfg->open = raw->open;
     return (0);
 }

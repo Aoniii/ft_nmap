@@ -183,7 +183,7 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
     inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
     printf("%s%s════════════════════════════════════════════════════════════════%s\n", C_CUT, C_DIM, C_RESET);
 
-    if (!cfg->no_dns && reverse_dns(target->ip, host, sizeof(host)))
+    if (cfg->dns && reverse_dns(target->ip, host, sizeof(host)))
         printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, host);
     else
         printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, target->name);
@@ -198,6 +198,9 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
         struct servent  *serv = getservbyport(htons(cfg->ports[i]), "tcp");
         const char      *service = serv ? serv->s_name : "Unassigned";
         const char      *mark = (concl == STATE_OPEN) ? "[+]" : "[-]";
+
+        if (concl != STATE_OPEN && cfg->open)
+            continue ;
 
         printf(" %s%s%s   %-6d   %-15s %s→%s %s%s%s%s\n",
                state_color(concl), mark, C_RESET,

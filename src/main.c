@@ -25,7 +25,8 @@ int main(int argc, char **argv) {
         .port = NULL,
         .scan = NULL,
         .speedup = 0,
-        .no_dns = false,
+        .dns = false,
+        .open = false,
     };
 
     t_option    options[] = {
@@ -67,11 +68,18 @@ int main(int argc, char **argv) {
             .help       = "number of parallel threads to use (max: 250)"
         },
         {
-            .short_opt  = 'n',
-            .long_opt   = "no-dns",
-            .flags      = OPT_LONG | OPT_SHORT | TYPE_BOOLEAN,
-            .value      = &data.no_dns,
-            .help       = "Disable reverse DNS resolution"
+            .short_opt  = 0,
+            .long_opt   = "reverse-dns",
+            .flags      = OPT_LONG | TYPE_BOOLEAN,
+            .value      = &data.dns,
+            .help       = "Enable reverse DNS resolution"
+        },
+                {
+            .short_opt  = 0,
+            .long_opt   = "open",
+            .flags      = OPT_LONG | TYPE_BOOLEAN,
+            .value      = &data.open,
+            .help       = "Display only open ports"
         },
         {
 			.short_opt  = 0,
