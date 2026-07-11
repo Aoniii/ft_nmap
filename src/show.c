@@ -122,6 +122,8 @@ static void print_details(t_port_result *pr, uint8_t flags, bool version) {
     int done[SCAN_COUNT] = {0};
     int first = 1;
 
+    version &= pr->version[0] != '\0';
+
     printf("       %s%s──%s ", C_DIM, version ? "├" : "└", C_RESET);
     for (int s = 0; s < SCAN_COUNT; s++) {
         if (!(flags & (1 << s)) || done[s])
@@ -149,7 +151,7 @@ static void print_details(t_port_result *pr, uint8_t flags, bool version) {
     }
     printf("\n");
 
-    if (version && pr->version[0] != '\0')
+    if (version)
         printf("       %s└──%s Version: %s\n", C_DIM, C_RESET, pr->version);
 }
 
