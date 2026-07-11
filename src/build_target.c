@@ -101,6 +101,9 @@ static int  add_target(t_target **last, t_config *cfg, char *ip, char **err) {
         return (-1);
     }
 
+    for (int i = 0; i < cfg->nb_ports; i++)
+        node->ports[i].version[0] = '\0';
+
     return (0);
 }
 

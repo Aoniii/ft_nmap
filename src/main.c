@@ -62,6 +62,13 @@ int main(int argc, char **argv) {
             .value      = &data.scan,
             .help       = "Scan types: SYN/NULL/FIN/XMAS/ACK/UDP, '/'-separated (default: all)"
         },
+        {
+            .short_opt  = 0,
+            .long_opt   = "version-detection",
+            .flags      = OPT_LONG | TYPE_BOOLEAN,
+            .value      = &data.version,
+            .help       = "Probe open ports to identify service and version"
+        },
         CATEGORY("Performance\n"),
         {
             .short_opt  = 0,

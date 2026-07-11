@@ -38,5 +38,6 @@ int build_config(t_raw_data *raw, t_config *cfg) {
 
     cfg->dns = raw->dns;
     cfg->open = raw->open;
+    cfg->version = raw->version;
     return (0);
 }

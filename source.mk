@@ -17,4 +17,5 @@ MAIN_SRCS	+=	send_packet.c
 MAIN_SRCS	+=	set_filter.c
 MAIN_SRCS	+=	show.c
 MAIN_SRCS	+=	utils.c
+MAIN_SRCS	+=	version_detect.c
 MAIN_SRCS	+=	worker.c

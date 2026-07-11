@@ -117,12 +117,12 @@ static t_state  get_conclusion(t_port_result *pr, uint8_t scan_flags) {
  * @brief print_details - Prints per-scan results, grouping consecutive
  * requested scans that share the same state (e.g. "FIN/XMAS:Open|Filtered").
  */
-static void print_details(t_port_result *pr, uint8_t flags) {
+static void print_details(t_port_result *pr, uint8_t flags, bool version) {
     static const char *names[] = {"SYN", "NULL", "ACK", "FIN", "XMAS", "UDP"};
     int done[SCAN_COUNT] = {0};
     int first = 1;
 
-    printf("       %s└──%s ", C_DIM, C_RESET);
+    printf("       %s%s──%s ", C_DIM, version ? "├" : "└", C_RESET);
     for (int s = 0; s < SCAN_COUNT; s++) {
         if (!(flags & (1 << s)) || done[s])
             continue ;
@@ -148,6 +148,9 @@ static void print_details(t_port_result *pr, uint8_t flags) {
         first = 0;
     }
     printf("\n");
+
+    if (version && pr->version[0] != '\0')
+        printf("       %s└──%s Version: %s\n", C_DIM, C_RESET, pr->version);
 }
 
 /**
@@ -207,6 +210,6 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
                cfg->ports[i], service,
                C_DIM, C_RESET,
                C_BOLD, state_color(concl), state_to_str(concl), C_RESET);
-        print_details(&target->ports[i], cfg->scan_flags);
+        print_details(&target->ports[i], cfg->scan_flags, cfg->version);
     }
 }

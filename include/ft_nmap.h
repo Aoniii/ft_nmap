@@ -15,6 +15,7 @@ typedef struct  s_raw_data {
     int         speedup;
     bool        dns;
     bool        open;
+    bool        version;
 }               t_raw_data;
 
 typedef enum    e_state {
@@ -29,6 +30,7 @@ typedef enum    e_state {
 typedef struct  s_port_result {
     t_state     results[6];
     t_state     conclusion;
+    char        version[128];       // service banner, "unknown" if none
 }               t_port_result;
 
 typedef struct      s_target {
@@ -46,6 +48,7 @@ typedef struct  s_config {
     int         speedup;
     bool        dns;
     bool        open;
+    bool        version;
 }               t_config;
 
 enum    e_scan_type {
@@ -68,6 +71,7 @@ enum    e_scan_type {
 
 int nmap(t_raw_data *raw, char **args);
 
-int reverse_dns(struct in_addr ip, char *host, size_t hostlen);
+int     reverse_dns(struct in_addr ip, char *host, size_t hostlen);
+void    grab_version(struct in_addr ip, int port, char *out, size_t outlen);
 
 #endif
