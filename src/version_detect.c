@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
