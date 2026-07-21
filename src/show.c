@@ -18,12 +18,12 @@ static void show_target_ip(t_config cfg) {
     printf(" ➔ Target: ");
     if (cfg.targets && !cfg.targets->next) {
         inet_ntop(AF_INET, &cfg.targets->ip, ip, sizeof(ip));
-        printf("%s\n", ip);
+        printf("%s (%s)\n", ip, cfg.targets->name);
         return;
     }
     for (target = cfg.targets; target; target = target->next) {
         inet_ntop(AF_INET, &target->ip, ip, sizeof(ip));
-        printf("\n\t- %s", ip);
+        printf("\n\t- %s (%s)", ip, target->name);
     }
     printf("\n");
 }
