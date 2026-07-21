@@ -16,6 +16,7 @@ typedef struct  s_raw_data {
     bool        dns;
     bool        open;
     bool        version;
+    bool        progress;
 }               t_raw_data;
 
 typedef enum    e_state {
@@ -49,6 +50,7 @@ typedef struct  s_config {
     bool        dns;
     bool        open;
     bool        version;
+    bool        progress;
 }               t_config;
 
 enum    e_scan_type {

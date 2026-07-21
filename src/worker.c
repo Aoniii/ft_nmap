@@ -13,6 +13,7 @@ int queue_init(t_work_queue *q, t_net *net, t_config *cfg) {
     q->net      = net;
     q->cfg      = cfg;
     q->error    = 0;
+    q->done     = false;
 
     // build the list of requested scans from the bitmask
     q->nb_scans = 0;

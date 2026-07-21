@@ -1,6 +1,10 @@
 #include "ft_nmap.h"
 #include "parser.h"
+#include "display.h"
 #include <stddef.h>
+#include <unistd.h>
+
+int g_color = 0;
 
 int main(int argc, char **argv) {
     t_parser_ctx    ctx;
@@ -27,6 +31,7 @@ int main(int argc, char **argv) {
         .speedup = 0,
         .dns = false,
         .open = false,
+        .progress = false,
     };
 
     t_option    options[] = {
@@ -93,6 +98,13 @@ int main(int argc, char **argv) {
             .value      = &data.open,
             .help       = "Show only open ports, hide closed and filtered"
         },
+        {
+            .short_opt  = 0,
+            .long_opt   = "progress",
+            .flags      = OPT_LONG | TYPE_BOOLEAN,
+            .value      = &data.progress,
+            .help       = "Show a live progress dashboard during the scan (requires threads)"
+        },
         CATEGORY("Misc\n"),
         {
 			.short_opt  = 0,
@@ -117,6 +129,7 @@ int main(int argc, char **argv) {
 		return (ctx.err == CALLBACK_EXIT ? 0 : 1);
 	}
 
+    g_color = isatty(STDOUT_FILENO);
     int ret = nmap(&data, args);
 
     cleaner(args);

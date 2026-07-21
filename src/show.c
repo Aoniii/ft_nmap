@@ -6,8 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 
-static int  g_color = 0;
-
 /**
  * @brief show_target_ip - Prints the target IP(s) for the scan header.
  * Single target  -> inline: "Target Ip-Address: 1.2.3.4"
@@ -176,8 +174,6 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
     char    host[NI_MAXHOST];
     int     n_open = 0, n_closed = 0, n_other = 0;
 
-    g_color = isatty(STDOUT_FILENO);
-
     for (int i = 0; i < cfg->nb_ports; i++) {
         t_state c = get_conclusion(&target->ports[i], cfg->scan_flags);
         if (c == STATE_OPEN) n_open++;
@@ -186,7 +182,7 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
     }
 
     inet_ntop(AF_INET, &target->ip, buff, sizeof(buff));
-    printf("%s%s════════════════════════════════════════════════════════════════%s\n", C_CUT, C_DIM, C_RESET);
+    printf("%s%s════════════════════════════════════════════════════════════════%s\n", cfg->progress ? C_CUT(4) : C_CUT(1), C_DIM, C_RESET);
 
     if (cfg->dns && reverse_dns(target->ip, host, sizeof(host)))
         printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, host);

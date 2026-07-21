@@ -23,6 +23,7 @@ typedef struct      s_work_queue {
     int             next_task;                  // next task index to hand out
     int             total_tasks;                // nb_ports * nb_scans
     int             error;                      // set by any worker that fails pcap setup
+    bool            done;                       // set by main when all workers have joined, tells monitor to stop
 }                   t_work_queue;
 
 int     queue_init(t_work_queue *q, t_net *net, t_config *cfg);

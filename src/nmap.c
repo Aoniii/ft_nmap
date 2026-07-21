@@ -3,10 +3,13 @@
 #include "display.h"
 #include "worker.h"
 #include <arpa/inet.h>
+#include <bits/pthreadtypes.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 static void cleanup(t_work_queue *q, t_net *net, t_config *cfg) {
     pthread_mutex_destroy(&q->lock);
@@ -47,9 +50,11 @@ int nmap(t_raw_data *raw, char **args) {
     while (target) {
         q.target = target;
         q.next_task = 0;
-
         start_time = now_ms();
-        printf("\nScanning: %s\n", target->name);
+
+        bool use_progress = cfg.progress && cfg.speedup > 0 && isatty(STDOUT_FILENO);
+        if (!use_progress)
+            printf("\nScanning: %s\n", target->name);
 
         //  1. IP source for this target
         if (get_source_ip(target->ip, &net.src_ip) != 0) {
@@ -71,6 +76,13 @@ int nmap(t_raw_data *raw, char **args) {
                 return (-1);
             }
 
+            pthread_t   monitor;
+            bool        monitor_started = false;
+            if (use_progress) {
+                if (pthread_create(&monitor, NULL, progress_monitor, &q) == 0)
+                    monitor_started = true;
+            }
+
             int created = 0;
             for (int i = 0; i < cfg.speedup; i++) {
                 if (pthread_create(&threads[i], NULL, worker, &q) != 0)
@@ -82,6 +94,12 @@ int nmap(t_raw_data *raw, char **args) {
             for (int i = 0; i < created; i++)
                 pthread_join(threads[i], NULL);
 
+            if (monitor_started) {
+                pthread_mutex_lock(&q.lock);
+                q.done = true;
+                pthread_mutex_unlock(&q.lock);
+                pthread_join(monitor, NULL);
+            }
             free(threads);
         }
 
