@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
         .open = false,
         .progress = false,
         .ttl = 64,
+        .spoof = NULL,
     };
 
     t_option    options[] = {
@@ -83,13 +84,20 @@ int main(int argc, char **argv) {
             .value      = &data.speedup,
             .help       = "Number of parallel threads (0 = single-threaded, max: 250)"
         },
-        CATEGORY("Spoofing\n"),
+        CATEGORY("Evasion\n"),
         {
             .short_opt  = 0,
             .long_opt   = "ttl",
             .flags      = OPT_LONG | TYPE_INT,
             .value      = &data.ttl,
-            .help       = "Number of parallel threads (0 = single-threaded, max: 250)"
+            .help = "IP TTL for sent packets, 1-255 (default: 64)",
+        },
+        {
+            .short_opt  = 0,
+            .long_opt   = "spoof",
+            .flags      = OPT_LONG | TYPE_STRING,
+            .value      = &data.spoof,
+            .help       = "Spoof the source IP address (replies won't return, stealth only)"
         },
         CATEGORY("Resolution\n"),
         {

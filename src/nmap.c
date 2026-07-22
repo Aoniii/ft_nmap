@@ -46,6 +46,11 @@ int nmap(t_raw_data *raw, char **args) {
 
     show_config(cfg);
     target = cfg.targets;
+    if (cfg.use_spoof) {
+        char    s[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &cfg.spoof_ip, s, sizeof(s));
+        printf("\nNote: spoofing source as %s — replies will not return, results will be inconclusive.\n", s);
+    }
 
     while (target) {
         q.target = target;
@@ -62,6 +67,8 @@ int nmap(t_raw_data *raw, char **args) {
             target = target->next;
             continue ;
         }
+
+        if (cfg.use_spoof) net.src_ip = cfg.spoof_ip;
 
         // launch monitor thread for --progress
         pthread_t   monitor;

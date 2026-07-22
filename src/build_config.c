@@ -1,5 +1,6 @@
 #include "ft_nmap.h"
 #include "config.h"
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -36,15 +37,24 @@ int build_config(t_raw_data *raw, t_config *cfg) {
         return (-1);
     }
 
+    if (raw->ttl < 1 || raw->ttl > 255) {
+        fprintf(stderr, "ft_nmap: error: ttl must be between 1 and 255\n");
+        return (-1);
+    }
+
+    cfg->use_spoof = 0;
+    if (raw->spoof) {
+        if (inet_pton(AF_INET, raw->spoof, &cfg->spoof_ip) != 1) {
+            fprintf(stderr, "ft_nmap: error: invalid spoof IP (%s)\n", raw->spoof);
+            return (-1);
+        }
+        cfg->use_spoof = 1;
+    }
+
     cfg->dns = raw->dns;
     cfg->open = raw->open;
     cfg->version = raw->version;
     cfg->progress = raw->progress;
-
-    if (raw->ttl < 1 || raw->ttl > 255) {
-     fprintf(stderr, "ft_nmap: error: ttl must be between 1 and 255 (%i)\n", raw->ttl);
-        return (-1);
-    }
     cfg->ttl = raw->ttl;
 
     return (0);

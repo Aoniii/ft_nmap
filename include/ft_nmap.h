@@ -18,6 +18,7 @@ typedef struct  s_raw_data {
     bool        version;
     bool        progress;
     int         ttl;
+    char        *spoof;
 }               t_raw_data;
 
 typedef enum    e_state {
@@ -42,18 +43,20 @@ typedef struct      s_target {
     struct s_target *next;
 }                   t_target;
 
-typedef struct  s_config {
-    t_target    *targets;
-    uint16_t    ports[1024];
-    int         nb_ports;
-    uint8_t     scan_flags;
-    int         speedup;
-    bool        dns;
-    bool        open;
-    bool        version;
-    bool        progress;
-    int         ttl;
-}               t_config;
+typedef struct      s_config {
+    t_target        *targets;
+    uint16_t        ports[1024];
+    int             nb_ports;
+    uint8_t         scan_flags;
+    int             speedup;
+    bool            dns;
+    bool            open;
+    bool            version;
+    bool            progress;
+    int             ttl;
+    struct in_addr  spoof_ip;
+    int             use_spoof;
+}                   t_config;
 
 enum    e_scan_type {
     SCAN_SYN    = 0,
