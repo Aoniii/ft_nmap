@@ -86,10 +86,6 @@ void    *worker(void *arg) {
 
         // store the result in this task's dedicated cell (no lock needed)
         q->target->ports[port_idx].results[scan_type] = st;
-
-        // version detection: only if requested, only on open ports, only once
-        if (q->cfg->version && st == STATE_OPEN && q->target->ports[port_idx].version[0] == '\0')
-            grab_version(q->target->ip, port, q->target->ports[port_idx].version, sizeof(q->target->ports[port_idx].version));
     }
 
     pcap_close(local_net.handle);

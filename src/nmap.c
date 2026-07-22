@@ -119,7 +119,20 @@ int nmap(t_raw_data *raw, char **args) {
             return (-1);
         }
 
-        show_results(now_ms() - start_time, target, &cfg);
+        long elapsed = now_ms() - start_time;
+
+        if (cfg.version) {
+            for (int i = 0; i < cfg.nb_ports; i++) {
+                for (int s = 0; s < SCAN_COUNT; s++) {
+                    if ((cfg.scan_flags & (1 << s)) && target->ports[i].results[s] == STATE_OPEN) {
+                        grab_version(target->ip, cfg.ports[i], target->ports[i].version, sizeof(target->ports[i].version));
+                        break ;
+                    }
+                }
+            }
+        }
+
+        show_results(elapsed, target, &cfg);
         target = target->next;
     }
 
