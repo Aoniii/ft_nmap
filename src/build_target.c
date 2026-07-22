@@ -63,8 +63,11 @@ static int  resolve_target(char *target, struct in_addr *out) {
  * so that free_target can always clean it up, even if a later step fails.
  * Then fills name, resolves the IP, and allocates the per-port results.
  */
-static int  add_target(t_target **last, t_config *cfg, char *ip, char **err) {
+int add_target(t_target **last, t_config *cfg, char *ip, char **err) {
     t_target    *node;
+
+    if (strchr(ip, '/'))
+        return (add_cidr(last, cfg, ip, err));
 
     node = malloc(sizeof(t_target));
     if (!node) {

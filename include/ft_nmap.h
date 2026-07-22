@@ -73,6 +73,9 @@ enum    e_scan_type {
 
 int nmap(t_raw_data *raw, char **args);
 
+int add_target(t_target **last, t_config *cfg, char *ip, char **err);
+int add_cidr(t_target **last, t_config *cfg, const char *str, char **err_ptr);
+
 int     reverse_dns(struct in_addr ip, char *host, size_t hostlen);
 void    grab_version(struct in_addr ip, int port, char *out, size_t outlen);
 

@@ -185,9 +185,9 @@ void show_results(long elapsed, t_target *target, t_config *cfg) {
     printf("%s%s════════════════════════════════════════════════════════════════%s\n", cfg->progress ? C_CUT(4) : C_CUT(1), C_DIM, C_RESET);
 
     if (cfg->dns && reverse_dns(target->ip, host, sizeof(host)))
-        printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, host);
+        printf("%s %s%s%s (%s)\n", C_CLEAR, C_BOLD, buff, C_RESET, host);
     else
-        printf(" %s%s%s (%s)\n", C_BOLD, buff, C_RESET, target->name);
+        printf("%s %s%s%s (%s)\n", C_CLEAR, C_BOLD, buff, C_RESET, target->name);
 
     printf(" %s%d open%s · %s%d closed%s · %s%d filtered/other%s · %s", C_GREEN, n_open, C_RESET, C_RED, n_closed, C_RESET, C_YELLOW, n_other, C_RESET, C_BLUE);
     print_duration(elapsed);

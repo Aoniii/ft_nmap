@@ -2,6 +2,7 @@ MAIN_SRCS	=	main.c
 MAIN_SRCS	+=	build_config.c
 MAIN_SRCS	+=	build_target.c
 MAIN_SRCS	+=	checksum.c
+MAIN_SRCS	+=	cidr.c
 MAIN_SRCS	+=	forge_packet.c
 MAIN_SRCS	+=	get_link_hdr_len.c
 MAIN_SRCS	+=	get_source_ip.c

@@ -6,3 +6,4 @@ localhost   scanme.nmap.org
 google.fr
     
 dns.google example.com
+45.33.32.156/31

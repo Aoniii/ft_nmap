@@ -63,7 +63,7 @@ int nmap(t_raw_data *raw, char **args) {
             continue ;
         }
 
-        // launch monitor for --progress
+        // launch monitor thread for --progress
         pthread_t   monitor;
         bool        monitor_started = false;
         if (use_progress) {
