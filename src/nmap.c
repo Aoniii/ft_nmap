@@ -52,7 +52,7 @@ int nmap(t_raw_data *raw, char **args) {
         q.next_task = 0;
         start_time = now_ms();
 
-        bool use_progress = cfg.progress && cfg.speedup > 0 && isatty(STDOUT_FILENO);
+        bool use_progress = cfg.progress && isatty(STDOUT_FILENO);
         if (!use_progress)
             printf("\nScanning: %s\n", target->name);
 
@@ -61,6 +61,14 @@ int nmap(t_raw_data *raw, char **args) {
             fprintf(stderr, "ft_nmap: warning: cannot reach %s\n", target->name);
             target = target->next;
             continue ;
+        }
+
+        // launch monitor for --progress
+        pthread_t   monitor;
+        bool        monitor_started = false;
+        if (use_progress) {
+            if (pthread_create(&monitor, NULL, progress_monitor, &q) == 0)
+                monitor_started = true;
         }
 
         //  2. run the scan: mono-thread if speedup is 0, else N worker threads
@@ -76,13 +84,6 @@ int nmap(t_raw_data *raw, char **args) {
                 return (-1);
             }
 
-            pthread_t   monitor;
-            bool        monitor_started = false;
-            if (use_progress) {
-                if (pthread_create(&monitor, NULL, progress_monitor, &q) == 0)
-                    monitor_started = true;
-            }
-
             int created = 0;
             for (int i = 0; i < cfg.speedup; i++) {
                 if (pthread_create(&threads[i], NULL, worker, &q) != 0)
@@ -94,13 +95,15 @@ int nmap(t_raw_data *raw, char **args) {
             for (int i = 0; i < created; i++)
                 pthread_join(threads[i], NULL);
 
-            if (monitor_started) {
-                pthread_mutex_lock(&q.lock);
-                q.done = true;
-                pthread_mutex_unlock(&q.lock);
-                pthread_join(monitor, NULL);
-            }
             free(threads);
+        }
+
+        // close monitor
+        if (monitor_started) {
+            pthread_mutex_lock(&q.lock);
+            q.done = true;
+            pthread_mutex_unlock(&q.lock);
+            pthread_join(monitor, NULL);
         }
 
         if (q.error) {

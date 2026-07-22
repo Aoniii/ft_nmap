@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
             .long_opt   = "progress",
             .flags      = OPT_LONG | TYPE_BOOLEAN,
             .value      = &data.progress,
-            .help       = "Show a live progress dashboard during the scan (requires threads)"
+            .help       = "Show a live progress dashboard during the scan"
         },
         CATEGORY("Misc\n"),
         {
