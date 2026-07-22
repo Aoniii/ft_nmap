@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
         .dns = false,
         .open = false,
         .progress = false,
+        .ttl = 64,
     };
 
     t_option    options[] = {
@@ -80,6 +81,14 @@ int main(int argc, char **argv) {
             .long_opt   = "speedup",
             .flags      = OPT_LONG | TYPE_INT,
             .value      = &data.speedup,
+            .help       = "Number of parallel threads (0 = single-threaded, max: 250)"
+        },
+        CATEGORY("Spoofing\n"),
+        {
+            .short_opt  = 0,
+            .long_opt   = "ttl",
+            .flags      = OPT_LONG | TYPE_INT,
+            .value      = &data.ttl,
             .help       = "Number of parallel threads (0 = single-threaded, max: 250)"
         },
         CATEGORY("Resolution\n"),

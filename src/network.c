@@ -1,4 +1,5 @@
 #include "network.h"
+#include "ft_nmap.h"
 #include <errno.h>
 #include <netinet/in.h>
 #include <pcap/pcap.h>
@@ -86,7 +87,7 @@ int find_default_device(t_net *net) {
  * our own IP header, and finds the default capture interface. The pcap handle
  * itself is opened later, per target, since the interface may differ.
  */
-int setup_network(t_net *net) {
+int setup_network(t_net *net, t_config *cfg) {
     int on = 1;
 
     net->handle = NULL;
@@ -110,6 +111,7 @@ int setup_network(t_net *net) {
         close(net->sock);
         return (-1);
     }
+    net->ttl = cfg->ttl;
 
     return (0);
 }

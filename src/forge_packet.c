@@ -10,7 +10,7 @@
  * temporary pseudo-header + the TCP header. The IP checksum is left at 0
  * (the kernel fills it thanks to IP_HDRINCL).
  */
-void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags) {
+void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags, int ttl) {
     struct ip_hdr       *ip = (struct ip_hdr *)buffer;
     struct tcp_hdr      *tcp = (struct tcp_hdr *)(buffer + sizeof(struct ip_hdr));
     struct pseudo_hdr   pseudo;
@@ -25,7 +25,7 @@ void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint
     ip->tot_len     = htons(PACKET_SIZE);               // total size
     ip->id          = htons(0);                         // no fragmentation
     ip->frag_off    = 0;                                // not fragmenting, no offset
-    ip->ttl         = 64;                               // standard hop limit; high enough to reach any host
+    ip->ttl         = ttl;                              // time to live
     ip->protocol    = 6;                                // TCP
     ip->check       = 0;                                // kernel fills it (IP_HDRINCL)
     ip->saddr       = src.s_addr;                       // our IP, so the reply knows where to come back
@@ -60,7 +60,7 @@ void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint
  * UDP checksum is optional in IPv4 so we leave it at 0. The IP checksum is
  * filled by the kernel (IP_HDRINCL).
  */
-void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port) {
+void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, int ttl) {
     struct ip_hdr  *ip = (struct ip_hdr *)buffer;
     struct udp_hdr *udp = (struct udp_hdr *)(buffer + sizeof(struct ip_hdr));
 
@@ -68,7 +68,7 @@ void forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uin
     ip->version  = 4;                               // IPv4
     ip->ihl      = 5;                               // 5 words = 20 bytes header with no options
     ip->tot_len  = htons(UDP_PACKET_SIZE);          // IP + UDP total size
-    ip->ttl      = 64;                              // standard hop limit
+    ip->ttl      = ttl;                              // time to live
     ip->protocol = 17;                              // UDP
     ip->saddr    = src.s_addr;                      // our IP
     ip->daddr    = dest.s_addr;                     // the target

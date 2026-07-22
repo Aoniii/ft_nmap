@@ -80,7 +80,7 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
     // 1. forge and send the probe (capture is already listening via the filter)
     flags = scan_type_to_flags(scan_type);
     src_port = SRC_PORT + scan_type;
-    forge_packet(buffer, net->src_ip, target, src_port, port, flags);
+    forge_packet(buffer, net->src_ip, target, src_port, port, flags, net->ttl);
     if (send_packet(net->sock, buffer, PACKET_SIZE, target, port) == -1)
         return (STATE_UNKNOWN);
 
@@ -123,7 +123,7 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
     time_t              start;
 
     for (int attempt = 0; attempt < UDP_RETY; attempt++) {
-        forge_udp_packet(buffer, net->src_ip, target, port);
+        forge_udp_packet(buffer, net->src_ip, target, port, net->ttl);
         if (send_packet(net->sock, buffer, UDP_PACKET_SIZE, target, port) == -1)
             return (STATE_UNKNOWN);
 

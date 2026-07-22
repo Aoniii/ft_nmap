@@ -32,7 +32,7 @@ int nmap(t_raw_data *raw, char **args) {
         return (-1);
     }
 
-    if (setup_network(&net) == -1) {
+    if (setup_network(&net, &cfg) == -1) {
         free_target(&cfg);
         return (-1);
     }

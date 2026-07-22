@@ -6,6 +6,7 @@
 # include <stdint.h>
 # include <pcap.h>
 
+typedef struct s_config t_config;
 typedef enum e_state    t_state;
 
 typedef struct      s_net {
@@ -14,6 +15,7 @@ typedef struct      s_net {
     pcap_t          *handle;        // pcap capture handle (reopened per target)
     char            *device;        // default interface name (for non-loopback targets)
     int             link_hdr_len;   // datalink header size (14 Ethernet, 4 loopback, 16 cooked...)
+    int             ttl;
 }                   t_net;
 
 /*
@@ -112,8 +114,8 @@ struct          icmp_hdr {
 uint16_t    checksum(const void *data, size_t len);
 
 /* forge_packet.c */
-void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags);
-void    forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port);
+void    forge_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t src_port, uint16_t port, uint8_t flags, int ttl);
+void    forge_udp_packet(char *buffer, struct in_addr src, struct in_addr dest, uint16_t port, int ttl);
 
 /* get_link_hdr_len.c */
 int get_link_hdr_len(pcap_t *handle);
@@ -128,7 +130,7 @@ struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
 int         open_pcap(t_net *net, const char *iface);
 const char  *iface_for_target(t_net *net, struct in_addr target);
 int         find_default_device(t_net *net);
-int         setup_network(t_net *net);
+int         setup_network(t_net *net, t_config *cfg);
 void        cleanup_network(t_net *net);
 
 /* scan_one.c */

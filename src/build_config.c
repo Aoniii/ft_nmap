@@ -40,5 +40,12 @@ int build_config(t_raw_data *raw, t_config *cfg) {
     cfg->open = raw->open;
     cfg->version = raw->version;
     cfg->progress = raw->progress;
+
+    if (raw->ttl < 1 || raw->ttl > 255) {
+     fprintf(stderr, "ft_nmap: error: ttl must be between 1 and 255 (%i)\n", raw->ttl);
+        return (-1);
+    }
+    cfg->ttl = raw->ttl;
+
     return (0);
 }
