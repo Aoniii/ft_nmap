@@ -58,7 +58,7 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
             // range end: fill every port from (previous + 1) up to value
             i = cfg->ports[cfg->nb_ports - 1] + 1;
             // reject reversed ranges like "5-3"
-            if (i >= value) {
+            if (i > value) {
                 snprintf(*err, 1024, "Invalid range start must be lower than end");
                 return (-1);
             }
