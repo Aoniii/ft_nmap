@@ -132,26 +132,45 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
             if (pcap_next_ex(net->handle, &header, &packet) != 1)
                 continue ;
 
+            int caplen = (int)header->caplen;
+            if (caplen < net->link_hdr_len + (int)sizeof(struct ip_hdr))
+                continue ;
+
             // read the IP header to know the protocol of the reply
             struct ip_hdr *ip = (struct ip_hdr *)(packet + net->link_hdr_len);
             int ip_hdr_len = ip->ihl * 4;
+            if (ip_hdr_len < (int)sizeof(struct ip_hdr))
+                continue ;
 
             if (ip->protocol == 17) {   // direct UDP reply -> open
+                if (caplen < net->link_hdr_len + ip_hdr_len + (int)sizeof(struct udp_hdr))
+                    continue ;
+
                 // check it's addressed to OUR udp source port
                 struct udp_hdr *udp = (struct udp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
                 if (ntohs(udp->dest) != SRC_PORT + SCAN_UDP)
-                    continue;           // reply for another thread
+                    continue ;          // reply for another thread
                 // and that it comes from the port we scanned
                 if (ntohs(udp->source) != port)
-                    continue;
+                    continue ;
                 return (STATE_OPEN);
-            }
-            if (ip->protocol == 1) {    // ICMP
+            } else if (ip->protocol == 1) {     // ICMP
+                if (caplen < net->link_hdr_len + ip_hdr_len + (int)sizeof(struct icmp_hdr))
+                    continue ;
+
                 struct icmp_hdr *icmp = (struct icmp_hdr *)(packet + net->link_hdr_len + ip_hdr_len);
-                struct ip_hdr  *orig_ip = (struct ip_hdr *)(packet + net->link_hdr_len + ip_hdr_len + sizeof(struct icmp_hdr));
-                int orig_ip_len = orig_ip->ihl * 4;
-                struct udp_hdr *orig_udp = (struct udp_hdr *)
-                    ((char *)orig_ip + orig_ip_len);
+                if (caplen < net->link_hdr_len + ip_hdr_len + (int)sizeof(struct icmp_hdr) + (int)sizeof(struct ip_hdr))
+                    continue ;
+
+                struct ip_hdr   *orig_ip = (struct ip_hdr *)(packet + net->link_hdr_len + ip_hdr_len + sizeof(struct icmp_hdr));
+                int             orig_ip_len = orig_ip->ihl * 4;
+
+                if (orig_ip_len < (int)sizeof(struct ip_hdr))
+                    continue ;
+                if (caplen < net->link_hdr_len + ip_hdr_len + (int)sizeof(struct icmp_hdr) + orig_ip_len + (int)sizeof(struct udp_hdr))
+                    continue ;
+
+                struct udp_hdr  *orig_udp = (struct udp_hdr *)((char *)orig_ip + orig_ip_len);
 
                 // is this ICMP about OUR probe? (copied UDP dest = the port we scanned)
                 if (ntohs(orig_udp->dest) != port)
