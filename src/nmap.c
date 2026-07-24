@@ -198,5 +198,6 @@ int nmap(t_raw_data *raw, char **args) {
         }
     }
 
+    cleanup(&q, &net, &cfg);
     return (0);
 }
