@@ -87,7 +87,9 @@ int nmap(t_raw_data *raw, char **args) {
             worker(&q);
         } else {
             // multi-thread: create N workers and wait for them
-            pthread_t *threads = malloc(sizeof(pthread_t) * cfg.speedup);
+            int         nb_threads = (cfg.speedup < q.total_tasks) ? cfg.speedup : q.total_tasks;
+            pthread_t   *threads = malloc(sizeof(pthread_t) * nb_threads);
+
             if (!threads) {
                 fprintf(stderr, "ft_nmap: error: failed to alloc threads, aborting scan\n");
                 cleanup(&q, &net, &cfg);
@@ -95,7 +97,7 @@ int nmap(t_raw_data *raw, char **args) {
             }
 
             int created = 0;
-            for (int i = 0; i < cfg.speedup; i++) {
+            for (int i = 0; i < nb_threads; i++) {
                 if (pthread_create(&threads[i], NULL, worker, &q) != 0)
                     break ;     // stop at the first failure
                 created++;
