@@ -68,6 +68,9 @@ int nmap(t_raw_data *raw, char **args) {
             continue ;
         }
 
+        //  1b. use the interface that actually routes to this target
+        set_device_for_source(&net, net.src_ip);
+
         if (cfg.use_spoof) net.src_ip = cfg.spoof_ip;
 
         // launch monitor thread for --progress

@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <ifaddrs.h>
 
 /**
  * @brief open_pcap - Opens (or reopens) the pcap handle on a given interface.
@@ -58,6 +59,49 @@ const char  *iface_for_target(t_net *net, struct in_addr target) {
     if ((ntohl(target.s_addr) & 0xFF000000) == 0x7F000000)
         return ("lo");
     return (net->device);
+}
+
+/**
+ * @brief iface_for_source - Interface name whose IPv4 address equals src.
+ * Returns 0 and fills out on success, -1 if no interface carries that address.
+ */
+static int  iface_for_source(struct in_addr src, char *out, size_t outlen) {
+    struct ifaddrs  *ifap;
+    struct ifaddrs  *ifa;
+
+    if (getifaddrs(&ifap) == -1)
+        return (-1);
+    for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
+        if (!ifa->ifa_addr || ifa->ifa_addr->sa_family != AF_INET)
+            continue ;
+        if (((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr == src.s_addr) {
+            strncpy(out, ifa->ifa_name, outlen - 1);
+            out[outlen - 1] = 0;
+            freeifaddrs(ifap);
+            return (0);
+        }
+    }
+    freeifaddrs(ifap);
+    return (-1);
+}
+
+/**
+ * @brief set_device_for_source - Points net->device at the interface that
+ * actually routes to a target (matched via its source IP), instead of the
+ * first device pcap happened to list. Best effort: on no match, the current
+ * device is kept as fallback.
+ */
+void    set_device_for_source(t_net *net, struct in_addr src) {
+    char    ifname[64];
+    char    *dev;
+
+    if (iface_for_source(src, ifname, sizeof(ifname)) != 0)
+        return ;
+    dev = strdup(ifname);
+    if (!dev)
+        return ;
+    free(net->device);
+    net->device = dev;
 }
 
 /**

@@ -129,6 +129,7 @@ struct tcp_hdr  *get_tcp_header(t_net *net, const u_char *packet, int caplen);
 /* network.c */
 int         open_pcap(t_net *net, const char *iface);
 const char  *iface_for_target(t_net *net, struct in_addr target);
+void        set_device_for_source(t_net *net, struct in_addr src);
 int         find_default_device(t_net *net);
 int         setup_network(t_net *net, t_config *cfg);
 void        cleanup_network(t_net *net);
