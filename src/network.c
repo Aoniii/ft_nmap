@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "network.h"
 #include "ft_nmap.h"
 #include <errno.h>
