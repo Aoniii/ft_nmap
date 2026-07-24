@@ -25,23 +25,23 @@ int nmap(t_raw_data *raw, char **args) {
     long            start_time;
 
     if (build_config(raw, &cfg) == -1)
-        return (-1);
+        return (1);
 
     if (build_target(raw, &cfg, args) == -1) {
         free_target(&cfg);
-        return (-1);
+        return (1);
     }
 
     if (setup_network(&net, &cfg) == -1) {
         free_target(&cfg);
-        return (-1);
+        return (1);
     }
 
     if (queue_init(&q, &net, &cfg) == -1) {
         fprintf(stderr, "ft_nmap: error: failed to initialize work queue\n");
         cleanup_network(&net);
         free_target(&cfg);
-        return (-1);
+        return (1);
     }
 
     show_config(cfg);
@@ -88,7 +88,7 @@ int nmap(t_raw_data *raw, char **args) {
             if (!threads) {
                 fprintf(stderr, "ft_nmap: error: failed to alloc threads, aborting scan\n");
                 cleanup(&q, &net, &cfg);
-                return (-1);
+                return (1);
             }
 
             int created = 0;
@@ -116,7 +116,7 @@ int nmap(t_raw_data *raw, char **args) {
         if (q.error) {
             fprintf(stderr, "ft_nmap: error: pcap setup failed, aborting\n");
             cleanup(&q, &net, &cfg);
-            return (-1);
+            return (1);
         }
 
         long elapsed = now_ms() - start_time;
