@@ -3,3 +3,4 @@ ft_nmap
 tasks.md
 /.cache
 compile_commands.json
+.count
