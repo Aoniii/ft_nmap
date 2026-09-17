@@ -49,7 +49,7 @@ int parse_port(t_raw_data *raw, t_config *cfg, char **err) {
             return (-1);
         }
         // out of valid port range, or overflow
-        if (errno == ERANGE || value <= 0 || value > 65535) {
+        if (errno == ERANGE || value < 0 || value > 65535) {
             snprintf(*err, 1024, "The port value is incorrect (%ld)", value);
             return (-1);
         }
