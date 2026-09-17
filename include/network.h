@@ -106,7 +106,7 @@ struct          icmp_hdr {
 # define PACKET_SIZE        (sizeof(struct ip_hdr) + sizeof(struct tcp_hdr))
 # define UDP_PACKET_SIZE    (sizeof(struct ip_hdr) + sizeof(struct udp_hdr))
 # define SRC_PORT           49152       // port source local (éphémère)
-# define SCAN_TIMEOUT       2           // seconds to wait for a reply before "filtered"
+# define SCAN_TIMEOUT       1           // seconds to wait for a reply before "filtered"
 # define UDP_TIMEOUT        5           // UDP needs longer: ICMP replies are rate-limited
 # define UDP_RETY           5           // retransmit to beat ICMP rate-limiting
 
