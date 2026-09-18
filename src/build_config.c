@@ -1,8 +1,16 @@
 #include "ft_nmap.h"
 #include "config.h"
 #include <arpa/inet.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+static int  parse_mac(const char *s, uint8_t mac[6]) {
+    int n = 0;
+    if (sscanf(s, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx%n", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5], &n) != 6 || s[n] != 0)
+        return (-1);
+    return (0);
+}
 
 /**
  * @brief build_config - Builds the usable config from the raw parser data.
@@ -44,8 +52,8 @@ int build_config(t_raw_data *raw, t_config *cfg) {
 
     cfg->use_spoof = 0;
     if (raw->spoof) {
-        if (inet_pton(AF_INET, raw->spoof, &cfg->spoof_ip) != 1) {
-            fprintf(stderr, "ft_nmap: error: invalid spoof IP (%s)\n", raw->spoof);
+        if (parse_mac(raw->spoof, cfg->spoof_mac) != 0) {
+            fprintf(stderr, "ft_nmap: error: invalid spoof MAC (%s)\n", raw->spoof);
             return (-1);
         }
         cfg->use_spoof = 1;

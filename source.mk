@@ -12,6 +12,7 @@ MAIN_SRCS	+=	nmap.c
 MAIN_SRCS	+=	parse_port.c
 MAIN_SRCS	+=	parse_scan.c
 MAIN_SRCS	+=	progress.c
+MAIN_SRCS	+=	resolve_mac.c
 MAIN_SRCS	+=	reverse_dns.c
 MAIN_SRCS	+=	scan_one.c
 MAIN_SRCS	+=	scan_type_to_flags.c

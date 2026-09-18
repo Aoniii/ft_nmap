@@ -2,7 +2,9 @@
 #include "network.h"
 #include <netinet/in.h>
 #include <pcap/pcap.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/types.h>
 #include <time.h>
 
@@ -62,6 +64,19 @@ static t_state  no_reply_state(int scan_type) {
     }
 }
 
+static int  send_probe(t_net *net, char *l3, size_t l3_len, struct in_addr dst, uint16_t port) {
+    if (!net->use_spoof)
+        return (send_packet(net->sock, l3, l3_len, dst, port));
+
+    uint8_t         frame[ETH_HDR_LEN + PACKET_SIZE];
+    struct eth_hdr  *eth = (struct eth_hdr *)frame;
+    memcpy(eth->dst, net->dst_mac, 6);
+    memcpy(eth->src, net->src_mac, 6);
+    eth->ethertype = htons(ETH_P_IPV4);
+    memcpy(frame + ETH_HDR_LEN, l3, l3_len);
+    return (pcap_sendpacket(net->handle, frame, ETH_HDR_LEN + l3_len));
+}
+
 /**
  * @brief scan_one - Scans a single port with a single scan type.
  * Sends the forged probe, captures the reply with pcap, and interprets it.
@@ -81,7 +96,7 @@ t_state scan_one(t_net *net, struct in_addr target, uint16_t port, int scan_type
     flags = scan_type_to_flags(scan_type);
     src_port = SRC_PORT + scan_type;
     forge_packet(buffer, net->src_ip, target, src_port, port, flags, net->ttl);
-    if (send_packet(net->sock, buffer, PACKET_SIZE, target, port) == -1)
+    if (send_probe(net, buffer, PACKET_SIZE, target, port) == -1)
         return (STATE_UNKNOWN);
 
     // 2. capture loop with a timeout: wait for a reply to THIS port
@@ -124,7 +139,7 @@ t_state scan_one_udp(t_net *net, struct in_addr target, uint16_t port) {
 
     for (int attempt = 0; attempt < UDP_RETY; attempt++) {
         forge_udp_packet(buffer, net->src_ip, target, port, net->ttl);
-        if (send_packet(net->sock, buffer, UDP_PACKET_SIZE, target, port) == -1)
+        if (send_probe(net, buffer, UDP_PACKET_SIZE, target, port) == -1)
             return (STATE_UNKNOWN);
 
         start = time(NULL);

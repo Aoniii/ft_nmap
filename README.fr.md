@@ -68,7 +68,7 @@ ft_nmap [OPTIONS] --file <fichier>
 | `--version-detection` | — | Sonde les ports ouverts pour identifier le service/version | **Bonus** |
 | `--reverse-dns` | — | Résout chaque IP en nom d'hôte (requête PTR) | **Bonus** |
 | `--ttl` | 1–255 | TTL (durée de vie IP) des paquets envoyés (défaut `64`) | **Bonus** |
-| `--spoof` | IP | Forge une fausse adresse source (furtif ; les réponses ne reviennent pas) | **Bonus** |
+| `--spoof` | MAC | Forge une fausse adresse MAC source (furtif au niveau lien ; l'IP est conservée, donc les réponses reviennent) | **Bonus** |
 | `--open` | — | N'affiche que les ports ouverts, cache fermés/filtrés | **Bonus** |
 | `--progress` | — | Tableau de bord en direct pendant le scan | **Bonus** |
 | `--help` | — | Affiche l'aide et quitte | Obligatoire |
@@ -143,7 +143,7 @@ Tout ce que le sujet demande est fait :
 | `--version-detection` | Gestion DNS/Version | Se connecte à chaque port ouvert et lit sa bannière pour deviner le logiciel/version. |
 | `--reverse-dns` | Gestion DNS/Version | Retransforme chaque IP en nom d'hôte (résolution DNS inverse / PTR). |
 | `--ttl` | Flag pour passer l'IDS/Firewall | Permet de fixer le TTL IP des sondes (utile pour l'évasion / astuces à faible TTL). |
-| `--spoof` | Cacher l'adresse source | Envoie des paquets avec une **fausse IP source** (furtif — les réponses ne te reviennent pas). |
+| `--spoof` | Cacher l'adresse MAC | Envoie des trames avec une **fausse MAC source** (furtif au niveau lien — la vraie IP est conservée, donc les réponses te reviennent). |
 | `--open` | Flag additionnel | N'affiche **que** les ports ouverts. |
 | `--progress` | Flag additionnel | Affiche un **tableau de bord en direct** (pourcentage, temps écoulé, ETA) pendant le scan. |
 | Cibles CIDR | Flag additionnel | Une cible comme `192.168.1.0/24` est développée en chaque adresse du bloc. |
@@ -218,7 +218,8 @@ Deux outils bas niveau rendent cela possible :
 - **Socket brut (raw socket)** (pour *envoyer*) : un programme normal laisse le système
   d'exploitation construire les en-têtes des paquets à sa place. Un **socket brut** nous laisse
   écrire **nous-mêmes les en-têtes IP et TCP**, octet par octet — c'est ainsi qu'on peut poser
-  des flags arbitraires, une fausse source, un TTL personnalisé, etc. Construire des paquets à la
+  des flags arbitraires, un TTL personnalisé, etc. Usurper la MAC source descend d'un cran :
+  on construit soi-même toute la trame Ethernet et on l'injecte avec pcap. Construire des paquets à la
   main est une opération privilégiée, et c'est pourquoi **ft_nmap doit tourner en root** (`sudo`).
 - **pcap / filtre BPF** (pour *écouter*) : les réponses n'arrivent pas commodément sur notre
   socket, alors on utilise la bibliothèque **pcap** pour renifler directement la carte réseau et
@@ -330,7 +331,7 @@ ft_nmap/
 │   ├── progress.c          Le tableau de bord --progress
 │   ├── version_detect.c    Récupération de bannière --version-detection
 │   ├── reverse_dns.c       Résolution PTR --reverse-dns
-│   └── ...                 (helpers : IP source, taille d'en-tête de lien, flags…)
+│   └── ...                 (helpers : IP source, MAC du prochain saut, taille d'en-tête de lien, flags…)
 └── parser/             Parseur d'arguments en ligne de commande autonome (avec son propre README)
 ```
 

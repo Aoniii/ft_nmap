@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 /**
@@ -58,8 +59,8 @@ static void spoof_note(t_config *cfg) {
 
     if (!cfg->use_spoof)
         return ;
-    inet_ntop(AF_INET, &cfg->spoof_ip, s, sizeof(s));
-    printf("\nNote: spoofing source as %s — replies will not return, results will be inconclusive.\n", s);
+    inet_ntop(AF_INET, &cfg->spoof_mac, s, sizeof(s));
+    printf("\nNote: spoofing source MAC as %s — your real IP is kept, replies still return (local-link stealth only)\n", s);
 }
 
 /**
@@ -146,7 +147,11 @@ static int scan_target(t_work_queue *q, t_net *net, t_config *cfg, t_target *tar
     //  1b. use the interface that actually routes to this target
     set_device_for_source(net, net->src_ip);
 
-    if (cfg->use_spoof) net->src_ip = cfg->spoof_ip;
+    net->use_spoof = cfg->use_spoof;
+    get_if_mac(net->device, net->src_mac);
+    if (cfg->use_spoof)
+        memcpy(net->src_mac, cfg->spoof_mac, 6);
+    get_gateway_mac(net->dst_mac);
 
     //  launch monitor thread for --progress
     if (use_progress && pthread_create(&monitor, NULL, progress_monitor, q) == 0)

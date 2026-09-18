@@ -16,6 +16,9 @@ typedef struct      s_net {
     char            *device;        // default interface name (for non-loopback targets)
     int             link_hdr_len;   // datalink header size (14 Ethernet, 4 loopback, 16 cooked...)
     int             ttl;
+    uint8_t         src_mac[6];
+    uint8_t         dst_mac[6];
+    int             use_spoof;
 }                   t_net;
 
 /*
@@ -95,6 +98,15 @@ struct          icmp_hdr {
     uint32_t    rest;       /* unused */
 } __attribute__((packed));
 
+struct          eth_hdr {
+    uint8_t     dst[6];
+    uint8_t     src[6];
+    uint16_t    ethertype;  // htons(0x0800) IPv4
+} __attribute__((packed));
+
+# define ETH_HDR_LEN    14
+# define ETH_P_IPV4     0x0800
+
 /* TCP flag masks: one bit per flag, combined with OR for the scans */
 # define TH_FIN  0x01
 # define TH_SYN  0x02
@@ -146,5 +158,9 @@ int send_packet(int sock, char *buffer, size_t size, struct in_addr dest, uint16
 
 /* set_filter.c */
 int set_filter(t_net *net, struct in_addr target);
+
+/* resolve_mac.c */
+int get_if_mac(const char *iface, uint8_t mac[6]);
+int get_gateway_mac(uint8_t mac[6]);
 
 #endif

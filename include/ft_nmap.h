@@ -54,7 +54,7 @@ typedef struct      s_config {
     bool            version;
     bool            progress;
     int             ttl;
-    struct in_addr  spoof_ip;
+    uint8_t         spoof_mac[6];
     int             use_spoof;
 }                   t_config;
 

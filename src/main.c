@@ -94,10 +94,10 @@ int main(int argc, char **argv) {
         },
         {
             .short_opt  = 0,
-            .long_opt   = "spoof",
+            .long_opt   = "spoof-mac",
             .flags      = OPT_LONG | TYPE_STRING,
             .value      = &data.spoof,
-            .help       = "Spoof the source IP address (replies won't return, stealth only)"
+            .help       = "Spoof the source MAC address (e.g. de:ad:be:ef:00:01); local-link stealth"
         },
         CATEGORY("Resolution\n"),
         {

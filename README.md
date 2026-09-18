@@ -68,7 +68,7 @@ ft_nmap [OPTIONS] --file <file>
 | `--version-detection` | — | Probe open ports to identify the running service/version | **Bonus** |
 | `--reverse-dns` | — | Resolve each IP back to a hostname (PTR lookup) | **Bonus** |
 | `--ttl` | 1–255 | IP Time-To-Live of the packets we send (default `64`) | **Bonus** |
-| `--spoof` | IP | Forge a fake source address (stealth; replies won't come back) | **Bonus** |
+| `--spoof` | MAC | Forge a fake source MAC address (local-link stealth; your IP is kept, so replies still come back) | **Bonus** |
 | `--open` | — | Show only open ports, hide closed/filtered | **Bonus** |
 | `--progress` | — | Live progress dashboard during the scan | **Bonus** |
 | `--help` | — | Print the help screen and exit | Mandatory |
@@ -143,7 +143,7 @@ Everything the subject asks for is done:
 | `--version-detection` | DNS/Version management | Connects to each open port and reads its banner to guess the software/version. |
 | `--reverse-dns` | DNS/Version management | Turns each IP back into a hostname (reverse/PTR DNS lookup). |
 | `--ttl` | Flag to go over the IDS/Firewall | Lets you set the IP TTL of the probes (useful for evasion / low-TTL tricks). |
-| `--spoof` | Hide the source address | Sends packets with a **fake source IP** (stealth — replies won't return to you). |
+| `--spoof` | Hide the source MAC | Sends frames with a **fake source MAC** (local-link stealth — your real IP is kept, so replies still return). |
 | `--open` | Additional flag | Displays **only** the open ports. |
 | `--progress` | Additional flag | Shows a **live dashboard** (percentage, elapsed, ETA) while scanning. |
 | CIDR targets | Additional flag | A target like `192.168.1.0/24` is expanded into every address of the block. |
@@ -216,9 +216,9 @@ Two low-level tools make this possible:
 
 - **Raw socket** (to *send*): a normal program lets the operating system build the packet
   headers for it. A **raw socket** lets us write the **IP and TCP headers ourselves**, byte
-  by byte — that's how we can set arbitrary flags, a fake source, a custom TTL, etc.
-  Building packets by hand is a privileged operation, which is why **ft_nmap must run as
-  root** (`sudo`).
+  by byte — that's how we can set arbitrary flags, a custom TTL, etc. Spoofing the source
+  MAC goes one step lower: we build the whole Ethernet frame ourselves and inject it with
+  pcap. Building packets by hand is a privileged operation, which is why **ft_nmap must run as
 - **pcap / BPF filter** (to *listen*): replies don't arrive on our socket in a convenient
   way, so we use the **pcap** library to sniff the network card directly and catch them. A
   **BPF filter** tells pcap "only show me packets coming back from this target, aimed at my
@@ -327,7 +327,7 @@ ft_nmap/
 │   ├── progress.c          The --progress dashboard
 │   ├── version_detect.c    --version-detection banner grabbing
 │   ├── reverse_dns.c       --reverse-dns PTR lookup
-│   └── ...                 (helpers: source IP, link header length, flags…)
+│   └── ...                 (helpers: source IP, next-hop MAC, link header length, flags…)
 └── parser/             Standalone command-line argument parser (with its own README)
 ```
 
