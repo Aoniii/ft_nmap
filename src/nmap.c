@@ -55,12 +55,11 @@ static int prepare(t_raw_data *raw, char **args, t_config *cfg, t_net *net, t_wo
  * come back and the results are inconclusive. No-op when spoofing is off.
  */
 static void spoof_note(t_config *cfg) {
-    char    s[INET_ADDRSTRLEN];
+    uint8_t *m = cfg->spoof_mac;
 
     if (!cfg->use_spoof)
         return ;
-    inet_ntop(AF_INET, &cfg->spoof_mac, s, sizeof(s));
-    printf("\nNote: spoofing source MAC as %s — your real IP is kept, replies still return (local-link stealth only)\n", s);
+    printf("\nNote: spoofing source MAC as %02x:%02x:%02x:%02x:%02x:%02x\n", m[0], m[1], m[2], m[3], m[4], m[5]);
 }
 
 /**
