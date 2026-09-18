@@ -147,6 +147,8 @@ static int scan_target(t_work_queue *q, t_net *net, t_config *cfg, t_target *tar
     set_device_for_source(net, net->src_ip);
 
     net->use_spoof = cfg->use_spoof;
+    if ((ntohl(target->ip.s_addr) & 0xFF000000) == 0x7F000000)
+        net->use_spoof = 0;   // No L2 spoofing on loopback (lo is not Ethernet)
     get_if_mac(net->device, net->src_mac);
     if (cfg->use_spoof)
         memcpy(net->src_mac, cfg->spoof_mac, 6);
